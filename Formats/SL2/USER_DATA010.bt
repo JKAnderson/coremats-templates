@@ -1,0 +1,32 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: SL2/USER_DATA010.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: USER_DATA010
+//  ID Bytes: 20 00 24 00
+//   History: 
+//------------------------------------------------
+
+#include "../../Types.bt"
+#include "SL2-Types.bt"
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == " GER"); // int "REG "
+    int unk04; Assert(unk04 == 2);
+    int regulationVersion;
+    int dataLength <format=hex>;
+} Header <bgcolor=cLtRed>;
+
+//------------------------------------------------
+
+Sl2File file(0x240020);
+Header header;
+ubyte data[header.dataLength] <bgcolor=cBlack, fgcolor=cWhite>;

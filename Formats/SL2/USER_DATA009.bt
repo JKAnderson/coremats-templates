@@ -1,0 +1,82 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: SL2/USER_DATA009.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: USER_DATA009
+//  ID Bytes: 10 00 06 00
+//   History: 
+//------------------------------------------------
+
+#include "../../Types.bt"
+#include "SL2-Types.bt"
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct (string expectedType) {
+    BlockHeader header; Assert(header.type == expectedType);
+    
+    local quad start <hidden=true> = FTell();
+    switch (header.type) {
+        case "---- begin ----":
+        case "----  end  ----":
+            Assert(header.version == 0 && header.length == 0);
+            break;
+        
+        case "KeyConfig":
+            Assert(header.version == 0 && header.length == 0xf49);
+            ubyte data[header.length];
+            break;
+        
+        case "Menu":
+            Assert(header.version == 0 && header.length == 0x38);
+            ubyte data[header.length];
+            break;
+        
+        case "OptionData":
+            Assert(header.version == 1 && header.length == 0x80);
+            ubyte data[header.length];
+            break;
+        
+        case "PowerOn":
+            Assert(header.version == 0 && header.length == 1);
+            ubyte data[header.length];
+            break;
+        
+        case "ProfileSummary":
+            Assert(header.version == 0 && header.length == 0x1730);
+            ubyte data[header.length];
+            break;
+        
+        case "SteamID":
+            Assert(header.version == 0 && header.length == 8);
+            ubyte data[header.length];
+            break;
+        
+        case "Version":
+            Assert(header.version == 0 && header.length == 4);
+            ubyte data[header.length];
+            break;
+            
+        default: Assert(false, Str("Unknown block type: \"%s\"", header.type));
+    }
+    Assert(FTell() == start + header.length);
+} Block <read=ReadBlockHeader(this.header), optimize=false>;
+
+//------------------------------------------------
+
+Sl2File file(0x60010);
+Block begin("---- begin ----");
+Block version("Version");
+Block steamId("SteamID");
+Block optionData("OptionData");
+Block menu("Menu");
+Block profileSummary("ProfileSummary");
+Block powerOn("PowerOn");
+Block keyConfig("KeyConfig");
+Block end("----  end  ----");

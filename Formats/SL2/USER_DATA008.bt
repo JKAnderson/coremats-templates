@@ -1,0 +1,159 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: SL2/USER_DATA008.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: USER_DATA008
+//  ID Bytes: 10 00 40 00
+//   History: 
+//------------------------------------------------
+
+#include "../../Types.bt"
+#include "SL2-Types.bt"
+
+struct BlockDataMemberList;
+struct BlockDataResult;
+struct BlockDataSummary;
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    int unk00; Assert(unk00 == 0);
+    int unk04; Assert(unk04 == 0);
+    int unk08; Assert(unk08 == 0);
+    int matchCount;
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct (string expectedType) {
+    BlockHeader header; Assert(header.type == expectedType);
+    
+    local quad start <hidden=true> = FTell();
+    switch (header.type) {
+        case "---- begin ----":
+        case "----  end  ----":
+            Assert(header.version == 0 && header.length == 0);
+            break;
+        
+        case "Account":
+            Assert(header.version == 2 && header.length == 0xd);
+            ubyte data[header.length];
+            break;
+            
+        case "AcName":
+            Assert(header.version == 0);
+            wstring acName;
+            break;
+            
+        case "Assemble":
+            Assert(header.version == 0);
+            ubyte data[header.length];
+            break;
+            
+        case "Emblem":
+            Assert(header.version == 0);
+            ubyte data[header.length];
+            break;
+        
+        case "MemberList":
+            Assert(header.version == 0);
+            BlockDataMemberList memberList(header);
+            break;
+            
+        case "NamePlate":
+            Assert(header.version == 0 && header.length == 0x40);
+            ubyte data[header.length];
+            break;
+            
+        case "PilotName":
+            Assert(header.version == 0);
+            wstring pilotName;
+            break;
+            
+        case "Result":
+            Assert(header.version == 1 && header.length == 5);
+            BlockDataResult result;
+            break;
+            
+        case "Summary":
+            Assert(header.version == 1 && header.length == 0x40);
+            BlockDataSummary summary;
+            break;
+        
+        default: Assert(false, Str("Unknown block type: \"%s\"", header.type));
+    }
+    Assert(FTell() == start + header.length);
+} Block <read=ReadBlockHeader(this.header), optimize=false>;
+
+
+typedef struct {
+    byte unk00; Assert(unk00 == 2); // Team count?
+    byte memberCount;
+    byte unk02; // Winning team?
+    byte unk03; // Match type?
+    int unk04 <hidden=true>; Assert(unk04 == 0);
+    FILETIME timestamp;
+    ubyte unk10[8]; // More timestamp? GUID? Hash? I have no idea.
+    int teamAlphaPoints;
+    int teamBetaPoints;
+    int missionId;
+    int unk24 <hidden=true>; Assert(unk24 == 0);
+    int unk28 <hidden=true>; Assert(unk28 == 0);
+    int unk2c <hidden=true>; Assert(unk2c == 0);
+    int unk30 <hidden=true>; Assert(unk30 == 0);
+    int unk34 <hidden=true>; Assert(unk34 == 0);
+    uquad matchId;
+} BlockDataSummary;
+
+
+typedef struct {
+    Block begin("---- begin ----");
+    Block account("Account");
+    Block result("Result");
+    
+    // Spectators only have an AcName instead of a full Assemble
+    if (PeekBlockType() == "AcName") {
+        Block acName("AcName");
+    } else {
+        Block assemble("Assemble");
+    }
+    
+    Block emblem("Emblem");
+    Block pilotName("PilotName");
+    Block namePlate("NamePlate");
+    Block end("----  end  ----");
+} Member <read=this.pilotName.pilotName, optimize=false>;
+
+typedef struct (BlockHeader &header) {
+    // You can get the member count from the summary block,
+    // but I prefer for it to be independent
+    local quad start <hidden=true> = FTell();
+    while (FTell() - start < header.length) {
+        Member members;
+    }
+} BlockDataMemberList <optimize=false>;
+
+
+typedef struct {
+    enum <byte> { ALPHA, BETA, SPECTATOR } team;
+    int points;
+} BlockDataResult;
+
+
+typedef struct {
+    Block begin("---- begin ----");
+    Block summary("Summary");
+    Block memberList("MemberList");
+    Block end("----  end  ----");
+} Match <optimize=false>;
+
+//------------------------------------------------
+
+Sl2File file(0x400010);
+Header header;
+Match matches[header.matchCount];

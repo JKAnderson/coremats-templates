@@ -1,0 +1,44 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: SL2/USER_DATA007.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: USER_DATA007
+//  ID Bytes: 10 00 20 00
+//   History: 
+//------------------------------------------------
+
+#include "../../Types.bt"
+#include "SL2-Types.bt"
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    int unk00; Assert(unk00 == 1);
+    int unk04; Assert(unk04 == 0);
+    int unk08; Assert(unk08 == 0);
+    int unk0c; Assert(unk0c == 0);
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    char magic[4]; Assert(magic == "EMBC");
+    int unk04 <format=hex>; Assert(unk04 == 0x291222);
+    int compressedSize <format=hex>;
+    int uncompressedSize <format=hex>;
+    ubyte compressedData[compressedSize];
+} Emblem <bgcolor=cLtGreen, optimize=false>;
+
+//------------------------------------------------
+
+Sl2File file(0x200010);
+Header header;
+int localEmblemCount <bgcolor=cRed>;
+Emblem localEmblems[localEmblemCount];
+int downloadedEmblemCount <bgcolor=cRed>;
+Emblem downloadedEmblems[downloadedEmblemCount];

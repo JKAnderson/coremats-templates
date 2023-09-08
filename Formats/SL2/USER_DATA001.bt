@@ -1,0 +1,57 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: SL2/USER_DATA001.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: USER_DATA001
+//  ID Bytes: 10 40 00 00
+//   History: 
+//------------------------------------------------
+
+#include "../../Types.bt"
+#include "SL2-Types.bt"
+
+struct BlockDataColorset;
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct (string expectedType) {
+    BlockHeader header; Assert(header.type == expectedType);
+    
+    local quad start <hidden=true> = FTell();
+    switch (header.type) {
+        case "---- begin ----":
+        case "----  end  ----":
+            Assert(header.version == 0 && header.length == 0);
+            break;
+        
+        case "PartColorset":
+        case "CamoColorset":
+            Assert(header.version == 0);
+            BlockDataColorset colorset;
+            break;
+        
+        default: Assert(false, Str("Unknown block type: \"%s\"", header.type));
+    }
+    Assert(FTell() == start + header.length);
+} Block <read=ReadBlockHeader(this.header)>;
+
+
+typedef struct {
+    int colorCount;
+    int unk04 <hidden=true>; Assert(unk04 == 0);
+    RGBA colors[colorCount];
+} BlockDataColorset <bgcolor=cLtGreen>;
+
+//------------------------------------------------
+
+Sl2File file(0x4010);
+Block begin("---- begin ----");
+Block partColorset("PartColorset");
+Block camoColorset("CamoColorset");
+Block end("----  end  ----");

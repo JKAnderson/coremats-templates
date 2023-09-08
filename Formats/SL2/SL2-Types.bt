@@ -1,0 +1,20 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: SL2/SL2-Types.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: Common types for SL2 templates.
+//   History: 
+//------------------------------------------------
+
+typedef struct (int expectedSize) {
+    // Size includes the hash, but not itself or padding
+    int innerSize <format=hex>; Assert(innerSize == expectedSize);
+    
+    local quad pos <hidden=true> = FTell();
+    FSkip(innerSize - 0x10);
+    ubyte hash[16];
+    ubyte padding[0x10 - (FTell() % 0x10)]; // In practice, always 0xc
+    FSeek(pos);
+} Sl2File <bgcolor=cWhite, fgcolor=cBlack>;

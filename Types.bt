@@ -1,0 +1,39 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: Types.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: Common types for Coremats templates.
+//   History: 
+//------------------------------------------------
+
+typedef struct {
+    ubyte r;
+    ubyte g;
+    ubyte b;
+    ubyte a;    
+} RGBA <read=ReadRGBA>;
+    
+string ReadRGBA(RGBA &color) {
+    string str;
+    return SPrintf(str, "#%02X%02X%02X%02X", color.r, color.g, color.b, color.a);
+}
+
+
+typedef struct {
+    char type[0x10];
+    int length <format=hex>;
+    int version;
+    int unk18 <hidden=true>; Assert(unk18 == 0);
+    int unk1c <hidden=true>; Assert(unk1c == 0);
+} BlockHeader <read=ReadBlockHeader, bgcolor=cBlack, fgcolor=cWhite>;
+
+string ReadBlockHeader(BlockHeader &header) {
+    return Str("%d[0x%05x] %s",
+        header.version, header.length, header.type);
+}
+
+string PeekBlockType() {
+    return ReadString(FTell(), 0x10);    
+}
