@@ -1,0 +1,218 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: GPARAM.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: *.gparam
+//  ID Bytes: 66 00 69 00 6C 00 74 00
+//   History: 
+//------------------------------------------------
+
+#include "../Types.bt"
+
+struct Field;
+struct Value;
+struct FieldStructB;
+
+struct ExtendedStructA;
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    wchar_t magic[4]; Assert(magic == "filt");
+    int version; Assert(version == 5);
+    byte unk0c; Assert(unk0c == 0);
+    byte unk0d; Assert(unk0d == 0 || unk0d == 1);
+    short unk0e; Assert(unk0e == 0);
+    int count10;
+    int unk14; Assert(unk14 == 0);
+    int paramOffsetsOffset <format=hex>; Assert(paramOffsetsOffset == 0x54);
+    int paramsOffset <format=hex>;
+    int fieldOffsetsOffset <format=hex>;
+    int fieldsOffset <format=hex>;
+    int valuesOffset <format=hex>;
+    int offset2c <format=hex>;
+    
+    int offset30 <format=hex>;
+    int count34; Assert(count34 == count10);
+    int offset38 <format=hex>; Assert(offset38 == offset30);
+    int offset3c <format=hex>;
+    float unk40;
+    int commentOffsetsOffsetsOffset <format=hex>;
+    int commentOffsetsOffset <format=hex>;
+    int commentsOffset <format=hex>;
+    float unk50;
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    int fieldCount;
+    int fieldOffsetsOffset <format=hex>;
+    wstring strA;
+    wstring strB;
+    
+    if (fieldCount == 0) return;
+    
+    FSeek(header.fieldOffsetsOffset + fieldOffsetsOffset);
+    int fieldOffsets[fieldCount] <format=hex, bgcolor=cDkGreen>;
+    
+    struct {
+        local int i;
+        for (i = 0; i < fieldCount; i++) {
+            FSeek(header.fieldsOffset + fieldOffsets[i]);
+            Field fields;
+        }
+    } fields;
+} Param <read=(Str("[%2d] ", fieldCount) + strA + " // " + strB), bgcolor=cGreen, optimize=false>;
+
+
+local int lastValuesEnd <hidden=true> = -1;
+
+typedef struct {
+    int valuesOffset <format=hex>;
+    int offset04 <format=hex>;
+    byte valueType;
+    ubyte valueCount;
+    short unk0a <hidden=true>; Assert(unk0a == 0);
+    wstring strA;
+    wstring strB;
+    
+    Assert(lastValuesEnd == -1
+        || header.valuesOffset + valuesOffset >= lastValuesEnd);
+    
+    if (valueCount == 0) return;
+    
+    FSeek(header.valuesOffset + valuesOffset);
+    Value values(valueType)[valueCount];
+    lastValuesEnd = FTell();
+    
+    FSeek(header.offset2c + offset04);
+    FieldStructB fieldStructBs[valueCount];
+} Field <read=ReadField, bgcolor=cLtYellow, optimize=false>;
+
+wstring ReadField(Field &field) {
+    return Str("%2d[%2d] ", field.valueType, field.valueCount) + field.strA + " // " + field.strB;
+}
+
+
+typedef struct (byte type) {
+    local byte type <hidden=true> = type;
+    switch (type) {
+        case 3:
+            int value;
+            break;
+        
+        case 5:
+            byte value;
+            break;
+        
+        case 7:
+            int value;
+            break;
+            
+        case 9:
+            float value;
+            break;
+        
+        case 11:
+            byte value;
+            break;
+            
+        case 12:
+            float value[2];
+            quad pad <hidden=true>; Assert(pad == 0);
+            break;
+        
+        case 13:
+            float value[3];
+            int pad <hidden=true>; Assert(pad == 0);
+            break;
+        
+        case 14:
+            float value[4];
+            break;
+        
+        default: byte b <bgcolor=cBlack>; Assert(false, "Unknown value type.");
+    }
+} Value <read=ReadValue, bgcolor=cYellow, optimize=false>;
+
+string ReadValue(Value &value) {
+    switch (value.type) {
+        case 12: return Str("%f, %f", value.value[0], value.value[1]);
+        default: return "";    
+    }
+}
+
+
+typedef struct {
+    int unk00;
+    float unk04;
+} FieldStructB <bgcolor=cDkYellow>;
+
+
+typedef struct {
+    int unk00; // Index?
+    int count04;
+    int offset08 <format=hex>;
+    int unk0c <hidden=true>; Assert(unk0c == 0 || unk0c == 1);
+    
+    if (count04 == 0) return;
+    
+    local quad pos <hidden=true> = FTell();
+    FSeek(header.offset3c + offset08);
+    int unkData[count04];
+    FSeek(pos);
+} ExtendedStructA <bgcolor=cAqua, optimize=false>;
+
+//------------------------------------------------
+
+Header header;
+
+FSeek(header.paramOffsetsOffset);
+int paramOffsets[header.count10] <format=hex, bgcolor=cLtGreen>;
+
+struct {
+    local int i;
+    for (i = 0; i < header.count10; i++) {
+        FSeek(header.paramsOffset + paramOffsets[i]);
+        Param params;
+    }
+} params;
+
+FSeek(header.offset38);
+ExtendedStructA extendedStructAs[header.count34];
+
+FSeek(header.commentOffsetsOffsetsOffset);
+int commentOffsetsOffsets[header.count34] <format=hex, bgcolor=cLtGray>;
+
+int getCommentCount(int paramIndex) {
+    local int commentCount = 0;
+    local int i;
+    for (i = 0; i < params.params[paramIndex].fieldCount; i++) {
+        if (params.params[paramIndex].fields.fields[i].valueCount > commentCount) {
+            commentCount = params.params[paramIndex].fields.fields[i].valueCount;
+        }
+    }
+    return commentCount;
+}
+
+struct {
+    local int i, j <hidden=true>;
+    for (i = 0; i < header.count34; i++) {
+        FSeek(header.commentOffsetsOffset + commentOffsetsOffsets[i]);
+        struct {
+            local int commentCount <hidden=true> = getCommentCount(i);
+            int commentOffsets[commentCount] <format=hex>;
+            
+            for (j = 0; j < commentCount; j++) {
+                FSeek(header.commentsOffset + commentOffsets[j]);
+                struct { wstring comment; } comment <read=comment, bgcolor=cDkGray>;
+            }
+        } comments <bgcolor=cGray>;
+    }
+} comments;
