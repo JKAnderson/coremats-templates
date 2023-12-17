@@ -1,10 +1,10 @@
 //------------------------------------------------
 //--- 010 Editor v14.0 Binary Template
 //
-//      File: Types.bt
+//      File: Common.bt
 //   Authors: TKGP
 //   Version: 
-//   Purpose: Common types for Coremats templates.
+//   Purpose: Common types and functions for Coremats templates.
 //   History: 
 //------------------------------------------------
 

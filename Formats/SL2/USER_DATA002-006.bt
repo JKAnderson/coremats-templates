@@ -11,7 +11,7 @@
 //   History: 
 //------------------------------------------------
 
-#include "../../Types.bt"
+#include "../../Common.bt"
 #include "SL2-Types.bt"
 
 struct BlockDataDateTime;

@@ -11,7 +11,7 @@
 //   History: 
 //------------------------------------------------
 
-#include "../Types.bt"
+#include "../Common.bt"
 
 struct Field;
 struct Value;
