@@ -55,3 +55,4 @@ Block begin("---- begin ----");
 Block partColorset("PartColorset");
 Block camoColorset("CamoColorset");
 Block end("----  end  ----");
+BlockDataColorset userColors;
