@@ -5,6 +5,9 @@
 //   Authors: TKGP
 //   Version: 
 //   Purpose: Common types and functions for Coremats templates.
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
 //   History: 
 //------------------------------------------------
 
@@ -59,25 +62,6 @@ typedef struct {
 string ReadRGBA(RGBA &color) {
     string str;
     return SPrintf(str, "#%02X%02X%02X%02X", color.r, color.g, color.b, color.a);
-}
-
-//------------------------------------------------
-
-typedef struct {
-    char type[0x10];
-    int length <format=hex>;
-    int version;
-    int unk18 <hidden=true>; Assert(unk18 == 0);
-    int unk1c <hidden=true>; Assert(unk1c == 0);
-} BlockHeader <read=ReadBlockHeader, bgcolor=cBlack, fgcolor=cWhite>;
-
-string ReadBlockHeader(BlockHeader &header) {
-    return Str("%-15s v%d [%5Xh]",
-        header.type, header.version, header.length);
-}
-
-string PeekBlockType() {
-    return ReadString(FTell(), 0x10);    
 }
 
 

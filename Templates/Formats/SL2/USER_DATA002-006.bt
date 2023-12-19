@@ -12,6 +12,7 @@
 //------------------------------------------------
 
 #include "../../Common.bt"
+#include "../../Chunk/Chunk.bt"
 #include "SL2-Types.bt"
 
 struct BlockDataDateTime;
@@ -30,10 +31,10 @@ typedef struct {
 
 
 typedef struct (string expectedType) {
-    BlockHeader header; Assert(header.type == expectedType);
+    ChunkHeader header; Assert(header.signature == expectedType);
     
     local quad start <hidden=true> = FTell();
-    switch (header.type) {
+    switch (header.signature) {
         case "---- begin ----":
         case "----  end  ----":
             Assert(header.version == 0 && header.length == 0);
@@ -59,10 +60,10 @@ typedef struct (string expectedType) {
             BlockDataThumbnail thumbnail;
             break;
             
-        default: Assert(false, Str("Unknown block type: \"%s\"", header.type));
+        default: Assert(false, Str("Unknown block type: \"%s\"", header.signature));
     }
     Assert(FTell() == start + header.length);
-} Block <read=ReadBlockHeader(this.header), optimize=false>;
+} Block <read=ReadChunkHeader(header), optimize=false>;
 
 
 typedef struct {

@@ -1,0 +1,36 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: Chunk.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+#ifndef COREMATS_CHUNK_H
+#define COREMATS_CHUNK_H
+
+#include "../Common.bt"
+
+typedef struct {
+    char signature[0x10];
+    int length <format=hex>;
+    int version;
+    int unk18 <hidden=true>; Assert(!unk18);
+    int unk1c <hidden=true>; Assert(!unk1c);
+} ChunkHeader <read=ReadChunkHeader, bgcolor=cBlack, fgcolor=cWhite>;
+
+string ReadChunkHeader(ChunkHeader &header) {
+    return Str("%-15s v%d [%5Xh]",
+        header.signature, header.version, header.length);
+}
+
+string PeekChunkSignature() {
+    return ReadString(FTell(), 0x10);    
+}
+
+#endif // COREMATS_CHUNK_H
