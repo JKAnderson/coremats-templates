@@ -8,6 +8,9 @@
 //   History: 
 //------------------------------------------------
 
+#ifndef COREMATS_COMMON_H
+#define COREMATS_COMMON_H
+
 int IsBool(int value) {
     return value == 0 || value == 1;
 }
@@ -69,8 +72,8 @@ typedef struct {
 } BlockHeader <read=ReadBlockHeader, bgcolor=cBlack, fgcolor=cWhite>;
 
 string ReadBlockHeader(BlockHeader &header) {
-    return Str("%d[0x%05x] %s",
-        header.version, header.length, header.type);
+    return Str("%-15s v%d [%5Xh]",
+        header.type, header.version, header.length);
 }
 
 string PeekBlockType() {
@@ -93,3 +96,5 @@ string ReadPackedSystemTime(PackedSystemTime &time) {
     return Str("%04d-%02d-%02d %02d:%02d:%02d",
         time.year, time.month, time.day, time.hour, time.minute, time.second);
 }
+
+#endif // COREMATS_COMMON_H
