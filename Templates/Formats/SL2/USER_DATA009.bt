@@ -12,7 +12,7 @@
 //------------------------------------------------
 
 #include "../../Common.bt"
-#include "../../Chunk/Chunk.bt"
+#include "../../Chunk.bt"
 #include "SL2-Types.bt"
 
 LittleEndian();
