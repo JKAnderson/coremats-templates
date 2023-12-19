@@ -23,74 +23,61 @@ LittleEndian();
 
 //------------------------------------------------
 
-typedef struct {
-    int unk00; Assert(unk00 == 0);
-    int unk04; Assert(unk04 == 0);
-    int unk08; Assert(unk08 == 0);
-    int matchCount;
-} Header <bgcolor=cLtRed>;
+COREMATS_CHUNK_START
 
+case "---- begin ----":
+case "----  end  ----":
+    Assert(header.version == 0 && header.length == 0);
+    break;
 
-typedef struct (string expectedType) {
-    ChunkHeader header; Assert(header.signature == expectedType);
+case "Account":
+    Assert(header.version == 2 && header.length == 0xd);
+    ubyte data[header.length];
+    break;
     
-    local quad start <hidden=true> = FTell();
-    switch (header.signature) {
-        case "---- begin ----":
-        case "----  end  ----":
-            Assert(header.version == 0 && header.length == 0);
-            break;
-        
-        case "Account":
-            Assert(header.version == 2 && header.length == 0xd);
-            ubyte data[header.length];
-            break;
-            
-        case "AcName":
-            Assert(header.version == 0);
-            wstring acName;
-            break;
-            
-        case "Assemble":
-            Assert(header.version == 0);
-            ubyte data[header.length];
-            break;
-            
-        case "Emblem":
-            Assert(header.version == 0);
-            ubyte data[header.length];
-            break;
-        
-        case "MemberList":
-            Assert(header.version == 0);
-            BlockDataMemberList memberList(header);
-            break;
-            
-        case "NamePlate":
-            Assert(header.version == 0 && header.length == 0x40);
-            ubyte data[header.length];
-            break;
-            
-        case "PilotName":
-            Assert(header.version == 0);
-            wstring pilotName;
-            break;
-            
-        case "Result":
-            Assert(header.version == 1 && header.length == 5);
-            BlockDataResult result;
-            break;
-            
-        case "Summary":
-            Assert(header.version == 1 && header.length == 0x40);
-            BlockDataSummary summary;
-            break;
-        
-        default: Assert(false, Str("Unknown block type: \"%s\"", header.signature));
-    }
-    Assert(FTell() == start + header.length);
-} Block <read=ReadChunkHeader(header), optimize=false>;
+case "AcName":
+    Assert(header.version == 0);
+    wstring acName;
+    break;
+    
+case "Assemble":
+    Assert(header.version == 0);
+    ubyte data[header.length];
+    break;
+    
+case "Emblem":
+    Assert(header.version == 0);
+    ubyte data[header.length];
+    break;
 
+case "MemberList":
+    Assert(header.version == 0);
+    BlockDataMemberList memberList(header);
+    break;
+    
+case "NamePlate":
+    Assert(header.version == 0 && header.length == 0x40);
+    ubyte data[header.length];
+    break;
+    
+case "PilotName":
+    Assert(header.version == 0);
+    wstring pilotName;
+    break;
+    
+case "Result":
+    Assert(header.version == 1 && header.length == 5);
+    BlockDataResult result;
+    break;
+    
+case "Summary":
+    Assert(header.version == 1 && header.length == 0x40);
+    BlockDataSummary summary;
+    break;
+        
+COREMATS_CHUNK_END Chunk <read=ReadChunkHeader(header), optimize=false>;
+
+//------------------------------------------------
 
 typedef struct {
     byte unk00; Assert(unk00 == 2); // Team count?
@@ -113,24 +100,24 @@ typedef struct {
 
 
 typedef struct {
-    Block begin("---- begin ----");
-    Block account("Account");
-    Block result("Result");
+    Chunk begin("---- begin ----");
+    Chunk account("Account");
+    Chunk result("Result");
     
     // Spectators only have an AcName instead of a full Assemble
-    if (PeekBlockSignature() == "AcName") {
-        Block acName("AcName");
+    if (PeekChunkSignature() == "AcName") {
+        Chunk acName("AcName");
     } else {
-        Block assemble("Assemble");
+        Chunk assemble("Assemble");
     }
     
-    Block emblem("Emblem");
-    Block pilotName("PilotName");
-    Block namePlate("NamePlate");
-    Block end("----  end  ----");
-} Member <read=this.pilotName.pilotName, optimize=false>;
+    Chunk emblem("Emblem");
+    Chunk pilotName("PilotName");
+    Chunk namePlate("NamePlate");
+    Chunk end("----  end  ----");
+} Member <read=pilotName.pilotName, optimize=false>;
 
-typedef struct (BlockHeader &header) {
+typedef struct (ChunkHeader &header) {
     // You can get the member count from the summary block,
     // but I prefer for it to be independent
     local quad start <hidden=true> = FTell();
@@ -145,12 +132,21 @@ typedef struct {
     int points;
 } BlockDataResult;
 
+//------------------------------------------------
 
 typedef struct {
-    Block begin("---- begin ----");
-    Block summary("Summary");
-    Block memberList("MemberList");
-    Block end("----  end  ----");
+    int unk00; Assert(unk00 == 0);
+    int unk04; Assert(unk04 == 0);
+    int unk08; Assert(unk08 == 0);
+    int matchCount;
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    Chunk begin("---- begin ----");
+    Chunk summary("Summary");
+    Chunk memberList("MemberList");
+    Chunk end("----  end  ----");
 } Match <optimize=false>;
 
 //------------------------------------------------

@@ -21,27 +21,22 @@ LittleEndian();
 
 //------------------------------------------------
 
-typedef struct (string expectedType) {
-    ChunkHeader header; Assert(header.signature == expectedType);
-    
-    local quad start <hidden=true> = FTell();
-    switch (header.signature) {
-        case "---- begin ----":
-        case "----  end  ----":
-            Assert(header.version == 0 && header.length == 0);
-            break;
-        
-        case "PartColorset":
-        case "CamoColorset":
-            Assert(header.version == 0);
-            BlockDataColorset colorset;
-            break;
-        
-        default: Assert(false, Str("Unknown block type: \"%s\"", header.signature));
-    }
-    Assert(FTell() == start + header.length);
-} Block <read=ReadChunkHeader(header)>;
+COREMATS_CHUNK_START
 
+case "---- begin ----":
+case "----  end  ----":
+    Assert(header.version == 0 && header.length == 0);
+    break;
+
+case "PartColorset":
+case "CamoColorset":
+    Assert(header.version == 0);
+    BlockDataColorset colorset;
+    break;
+    
+COREMATS_CHUNK_END Chunk <read=ReadChunkHeader(header), optimize=false>;
+
+//------------------------------------------------
 
 typedef struct {
     int colorCount;
@@ -52,8 +47,8 @@ typedef struct {
 //------------------------------------------------
 
 Sl2File file(0x4010);
-Block begin("---- begin ----");
-Block partColorset("PartColorset");
-Block camoColorset("CamoColorset");
-Block end("----  end  ----");
+Chunk begin("---- begin ----");
+Chunk partColorset("PartColorset");
+Chunk camoColorset("CamoColorset");
+Chunk end("----  end  ----");
 BlockDataColorset userColors;

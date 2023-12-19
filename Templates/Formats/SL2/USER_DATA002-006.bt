@@ -22,49 +22,36 @@ LittleEndian();
 
 //------------------------------------------------
 
-typedef struct {
-    int unk04; Assert(unk04 == 0);
-    int unk08; Assert(unk08 == 0);
-    int unk0c; // Index of last added preset, or something?
-    int presetCount;
-} Header <bgcolor=cLtRed>;
+COREMATS_CHUNK_START
 
+case "---- begin ----":
+case "----  end  ----":
+    Assert(header.version == 0 && header.length == 0);
+    break;
 
-typedef struct (string expectedType) {
-    ChunkHeader header; Assert(header.signature == expectedType);
+case "Category":
+    Assert(header.version == 0 && header.length == 1);
+    byte category;
+    break;
     
-    local quad start <hidden=true> = FTell();
-    switch (header.signature) {
-        case "---- begin ----":
-        case "----  end  ----":
-            Assert(header.version == 0 && header.length == 0);
-            break;
-        
-        case "Category":
-            Assert(header.version == 0 && header.length == 1);
-            byte category;
-            break;
+case "DateTime":
+    Assert(header.version == 0 && header.length == 0x10);
+    BlockDataDateTime dateTime;
+    break;
+    
+case "Design":
+    Assert(header.version == 0);
+    ubyte data[header.length];
+    break;
+    
+case "Thumbnail":
+    Assert(header.version == 0 && header.length == 0xac88);
+    BlockDataThumbnail thumbnail;
+    break;
             
-        case "DateTime":
-            Assert(header.version == 0 && header.length == 0x10);
-            BlockDataDateTime dateTime;
-            break;
-            
-        case "Design":
-            Assert(header.version == 0);
-            ubyte data[header.length];
-            break;
-            
-        case "Thumbnail":
-            Assert(header.version == 0 && header.length == 0xac88);
-            BlockDataThumbnail thumbnail;
-            break;
-            
-        default: Assert(false, Str("Unknown block type: \"%s\"", header.signature));
-    }
-    Assert(FTell() == start + header.length);
-} Block <read=ReadChunkHeader(header), optimize=false>;
+COREMATS_CHUNK_END Chunk <read=ReadChunkHeader(header), optimize=false>;
 
+//------------------------------------------------
 
 typedef struct {
     FILETIME fileTime;
@@ -83,14 +70,23 @@ typedef struct {
     ubyte pixelData[dataLength];
 } BlockDataThumbnail;
 
+//------------------------------------------------
 
 typedef struct {
-    Block begin("---- begin ----");
-    Block category("Category");
-    Block dateTime("DateTime");
-    Block design("Design");
-    Block thumbnail("Thumbnail");
-    Block end("----  end  ----");
+    int unk04; Assert(unk04 == 0);
+    int unk08; Assert(unk08 == 0);
+    int unk0c; // Index of last added preset, or something?
+    int presetCount;
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    Chunk begin("---- begin ----");
+    Chunk category("Category");
+    Chunk dateTime("DateTime");
+    Chunk design("Design");
+    Chunk thumbnail("Thumbnail");
+    Chunk end("----  end  ----");
 } Preset <optimize=false>;
 
 //------------------------------------------------

@@ -14,7 +14,7 @@
 #ifndef COREMATS_CHUNK_H
 #define COREMATS_CHUNK_H
 
-#include "../Common.bt"
+//------------------------------------------------
 
 typedef struct {
     char signature[0x10];
@@ -32,5 +32,38 @@ string ReadChunkHeader(ChunkHeader &header) {
 string PeekChunkSignature() {
     return ReadString(FTell(), 0x10);    
 }
+
+//------------------------------------------------
+
+int SetHashColor(char buffer[], int size) {
+    local uchar checksum[4];
+    local int len = ChecksumAlgArrayBytes(CHECKSUM_CRC32, checksum, buffer, size);
+    Assert(len == 4);
+    
+    local int oldColor = GetBackColor();
+    local int newColor = checksum[0] | (int)checksum[1] << 8 | (int)checksum[2] << 16;
+    SetBackColor(newColor);
+    return oldColor;
+}
+
+#define COREMATS_CHUNK_START \
+typedef struct (string expectedSignature) { \
+    ChunkHeader header; Assert(header.signature == expectedSignature); \
+    local int lastColor <hidden=true> = SetHashColor(header.signature, 16); \
+    \
+    local quad start <hidden=true> = FTell(); \
+    switch (header.signature) {
+// COREMATS_CHUNK_START
+
+#define COREMATS_CHUNK_END \
+        default: Assert(false, Str("Unknown chunk signature: \"%s\"", header.signature)); \
+    } \
+    Assert(FTell() == start + header.length); \
+    \
+    SetBackColor(lastColor); \
+}
+// COREMATS_CHUNK_END
+
+//------------------------------------------------
 
 #endif // COREMATS_CHUNK_H
