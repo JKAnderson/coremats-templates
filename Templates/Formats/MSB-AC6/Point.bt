@@ -215,7 +215,7 @@ typedef struct {
     if (indexCount) {
         short indices[indexCount];
     }
-} PointIndexList <read=Str("[%d]", count)>;
+} PointIndexList <read=Str("[%d]", indexCount)>;
 
 typedef struct {
     int unk00; Assert(unk00 == -1);
