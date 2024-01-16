@@ -1,0 +1,152 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: ESD-DLSE.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: Demon's Souls ESD
+//  Category: Coremats
+// File Mask: *.esd
+//  ID Bytes: 44 4C 53 45
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+
+struct DLVector;
+struct Buffer;
+struct Reference;
+
+string GetTypeName(int type) {
+    return header.strings[type - 1].str;    
+}
+
+BigEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    int length;
+    char str[length];
+} SharedString <read=str, optimize=false>;
+
+typedef struct {
+    char magic[4]; Assert(magic == "DLSE");
+    short unk04; Assert(unk04 == 2);
+    short unk06; Assert(unk06 == 3);
+    int unk08;
+    int count0c;
+    int unk10; // Consistently 2 more than the highest ID
+    short stringCount;
+    SharedString strings[stringCount];
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    short type; Assert(GetTypeName(type) == "EzStateProject");
+    int unk02; Assert(unk02 == 2);
+    DLVector maps;
+} EzStateProject <read=GetTypeName(type), bgcolor=cLtGreen>;
+
+
+typedef struct {
+    short type; Assert(GetTypeName(type) == "EzStateMap");
+    int unk0a; Assert(unk0a == 2);
+    int unk0e; // Seems to match the index in the project
+    Reference unkState; // Initial state?
+    DLVector states;
+    DLVector transitions;
+} EzStateMap <read=GetTypeName(type), bgcolor=cGreen>;
+
+
+typedef struct {
+    short type; Assert(GetTypeName(type) == "EzStateMapState");
+    int unk0a; Assert(unk0a == 2);
+    int unk0e; // Seems to match the index in the state map
+    DLVector transitions;
+    DLVector externalEventsA; // Enter events?
+    DLVector externalEventsB; // Exit events?
+} EzStateMapState <read=GetTypeName(type), bgcolor=cDkGreen, optimize=false>;
+
+
+typedef struct {
+    short type; Assert(GetTypeName(type) == "EzStateTransition");
+    int unk0a; Assert(unk0a == 3);
+    Buffer buffer; // Condition?
+    DLVector transitionHostEvents;
+} EzStateTransition <read=GetTypeName(type), bgcolor=cYellow, optimize=false>;
+
+
+typedef struct {
+    short type; Assert(GetTypeName(type) == "EzStateTransitionHostEvent");
+    int unk0a; Assert(unk0a == 1);
+} EzStateTransitionHostEvent <read=GetTypeName(type), bgcolor=cDkYellow, optimize=false>;
+
+
+typedef struct {
+    short type; Assert(GetTypeName(type) == "EzStateExternalEventT<ES_EVENT_PARAM_NUM_6>");
+    int unk0a; Assert(unk0a == 2);
+    int unk0e; // Event ID?
+    int count12;
+    if (count12 > 1) {
+        Buffer buffers[count12 - 1]; // Arguments?
+    }
+} EzStateExternalEvent <read=GetTypeName(type), bgcolor=cAqua>;
+
+
+typedef struct {
+    short type; Assert(GetTypeName(type) == "DLVector");
+    int count;
+    if (count) {
+        Reference items[count];
+    }
+} DLVector <read=Str("%s[%i]", GetTypeName(type), count), bgcolor=cWhite>;
+
+
+typedef struct {
+    short type; Assert(GetTypeName(type) == "buffer");
+    int length;
+    ubyte data[length];
+} Buffer <bgcolor=cBlack, fgcolor=cWhite, optimize=false>;
+
+
+// The first used ID is 1; 0 seems to be reserved for null references
+local int LAST_ID <hidden=true> = 0;
+
+typedef struct {
+    short type;
+    int id;
+    
+    local int hasData <hidden=true> = id > LAST_ID;
+    if (!hasData) return;
+    Assert(id == ++LAST_ID);
+    
+    switch (GetTypeName(type)) {
+        case "EzStateMap":
+            EzStateMap map; break;
+        case "EzStateMapState":
+            EzStateMapState mapState; break;
+        case "EzStateTransition":
+            EzStateTransition transition; break;
+        case "EzStateTransitionHostEvent":
+            EzStateTransitionHostEvent transitionHostEvent; break;
+        case "EzStateExternalEventT<ES_EVENT_PARAM_NUM_6>":
+            EzStateExternalEvent externalEvent; break;
+            
+        default: Assert(false);
+    }
+} Reference <read=ReadReference, bgcolor=cPurple, optimize=false>;
+
+string ReadReference(Reference &ref) {
+    if (ref.hasData)
+        return Str("%d <- %s", ref.id, GetTypeName(ref.type));
+    else
+        return Str("%d -> %s", ref.id, GetTypeName(ref.type));    
+}
+
+//------------------------------------------------
+
+Header header;
+EzStateProject project;
+quad unkX00 <format=hex, bgcolor=cLtPurple>;
+Reference unkReferences[header.count0c];
