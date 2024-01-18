@@ -81,17 +81,17 @@ typedef struct {
     if (version == 1) {
         Reference condition;
         Reference state;
-        DLVector_Reference unkVec; Assert(unkVec.count == 0);
+        DLVector_Reference unkVec; Assert(!unkVec.count);
     } else if (version == 3) {
-        Buffer buffer; // Condition?
-        DLVector_Reference transitionHostEvents;
+        Buffer condition;
+        DLVector_Reference events;
     }
 } EzStateTransition <read=GetTypeName(type), bgcolor=cLtYellow, optimize=false>;
 
 
 typedef struct {
     short type; Assert(GetTypeName(type) == "EzStateTransitionHostEvent");
-    int unk02; Assert(version == 1);
+    int version; Assert(version == 1);
 } EzStateTransitionHostEvent <read=GetTypeName(type), bgcolor=cYellow, optimize=false>;
 
 
@@ -122,11 +122,15 @@ typedef struct {
 
 typedef struct {
     short type; Assert(GetTypeName(type) == "EzStateExternalEventT<ES_EVENT_PARAM_NUM_6>");
-    int version; Assert(version == 2);
+    int version; Assert(version == 1 || version == 2);
     int unk06; // Event ID?
     int count0a;
     if (count0a > 1) {
-        Buffer buffers[count0a - 1]; // Arguments?
+        if (version == 1) {
+            EzStateEvaluator evaluators[count0a - 1]; // Arguments?
+        } else if (version == 2) {
+            Buffer buffers[count0a - 1]; // Arguments?
+        }
     }
 } EzStateExternalEventT <read=GetTypeName(type), bgcolor=cAqua>;
 
@@ -154,17 +158,33 @@ typedef struct {
 } Buffer <bgcolor=cBlack, fgcolor=cWhite, optimize=false>;
 
 
-local int _refIds[1024] <hidden=true>;
-local int _refCount <hidden=true> = 0;
+// This is purely a performance optimization;
+// searching a single flat list takes a very long time
+const int REF_SIZE <hidden=true> = 8192;
+const int REF_BUCKETS <hidden=true> = 31;
+const int REF_BUCKET_SIZE <hidden=true> = REF_SIZE / REF_BUCKETS;
+
+struct {
+    local int refCount = 0;
+    local int refIds[REF_BUCKET_SIZE];
+} _buckets[REF_BUCKETS] <hidden=true, optimize=false>;
 
 int addReference(int id) {
+    if (!id)
+        return false;
+    
+    local int bucket = id % REF_BUCKETS;
+    local int refCount = _buckets[bucket].refCount;
+    
     local int i;
-    for (i = 0; i < _refCount; i++) {
-        if (_refIds[i] == id)
-            return false;    
+    for (i = 0; i < refCount; i++) {
+        if (_buckets[bucket].refIds[i] == id)
+            return false;
     }
-    _refIds[_refCount] = id;
-    _refCount++;
+    
+    Assert(refCount < REF_BUCKET_SIZE, "Please download a bigger bucket.");
+    _buckets[bucket].refIds[refCount] = id;
+    _buckets[bucket].refCount++;
     return true;
 }
 
