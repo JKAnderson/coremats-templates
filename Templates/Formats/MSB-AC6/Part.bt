@@ -314,8 +314,8 @@ typedef struct {
     
     int unk00; // -1
     int unk04; Assert(!unk04);
-    int npcParamId;
     int npcThinkParamId;
+    int npcParamId;
     int unk10;
     short unk14; Assert(!unk14);
     short unk16;
