@@ -35,7 +35,7 @@ typedef struct {
 typedef struct {
     char magic[4]; Assert(magic == "DLSE");
     short unk04; Assert(unk04 == 2);
-    short version; Assert(version == 1 || version == 3);
+    short version; Assert(version == 0 || version == 1 || version == 3);
     if (version == 3) {
         int unk08;
         int count0c;
@@ -57,7 +57,7 @@ typedef struct {
     short type; Assert(GetTypeName(type) == "EzStateMap");
     int version; Assert(version == 1 || version == 2);
     int unk06; // Seems to match the index in the project
-    Reference unkState; // Initial state?
+    Reference unkState(-1); // Initial state?
     DLVector_Reference states;
     if (version == 2) {
         DLVector_Reference transitions;
@@ -79,9 +79,9 @@ typedef struct {
     short type; Assert(GetTypeName(type) == "EzStateTransition");
     int version; Assert(version == 1 || version == 3);
     if (version == 1) {
-        Reference condition;
-        Reference state;
-        DLVector_Reference unkVec; Assert(!unkVec.count);
+        Reference condition(-1);
+        Reference state(-1);
+        DLVector_Reference events;
     } else if (version == 3) {
         Buffer condition;
         DLVector_Reference events;
@@ -110,12 +110,17 @@ typedef struct {
 
 
 typedef struct {
-    short type; Assert(GetTypeName(type) == "EzStateExternalEvent");
+    short type; Assert(GetTypeName(type) == "EzStateExternalEvent"
+                    || GetTypeName(type) == "EzStateExternalEventT<ES_EVENT_PARAM_NUM_6>");
     int version; Assert(version == 1);
     int unk06; // Event ID?
     int count0a;
     if (count0a > 1) {
-        EzStateEvaluator evaluators[count0a - 1]; // Arguments?
+        if (version == 1) {
+            EzStateEvaluator evaluators[count0a - 1]; // Arguments?
+        } else if (version == 2) {
+            Buffer buffers[count0a - 1]; // Arguments?
+        }
     }
 } EzStateExternalEvent <read=GetTypeName(type), bgcolor=cAqua>;
 
@@ -139,7 +144,12 @@ typedef struct {
     short type; Assert(GetTypeName(type) == "DLVector");
     int count;
     if (count) {
-        Reference items[count];
+        if (header.version == 0) {
+            short itemType;
+            Reference items(itemType)[count];
+        } else {
+            Reference items(-1)[count];
+        }
     }
 } DLVector_Reference <read=Str("%s[%i]", GetTypeName(type), count), bgcolor=cWhite>;
 
@@ -188,8 +198,12 @@ int addReference(int id) {
     return true;
 }
 
-typedef struct {
-    short type;
+typedef struct (short vecType) {
+    if (vecType == -1) {
+        short type;
+    } else {
+        local short type = vecType;
+    }
     int id;
     
     local int hasData <hidden=true> = addReference(id);
@@ -207,9 +221,8 @@ typedef struct {
         case "EzState::detail::EzStateCondition":
             EzStateCondition condition; break;
         case "EzStateExternalEvent":
-            EzStateExternalEvent externalEvent; break;
         case "EzStateExternalEventT<ES_EVENT_PARAM_NUM_6>":
-            EzStateExternalEventT externalEventT; break;
+            EzStateExternalEvent externalEvent; break;
             
         default: Assert(false);
     }
