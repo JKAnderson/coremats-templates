@@ -27,9 +27,9 @@ enum <int> PartType {
 struct PartStruct50;
 struct PartStruct58;
 struct PartCommon;
-struct PartStruct70;
-struct PartStruct78;
-struct PartStruct80;
+struct PartGparam;
+struct PartSceneGparam;
+struct PartGrass;
 struct PartStruct88;
 struct PartStruct90;
 struct PartStruct98;
@@ -50,12 +50,12 @@ typedef struct (int version) {
     
     quad nameOffset <format=hex>; Assert(nameOffset);
     PartType type;
-    int localIndex;
+    int typeIndex; // Index among parts of the same type
     int modelIndex;
     int unk14 <hidden=true>; Assert(!unk14);
     quad layoutOffset <format=hex>; Assert(layoutOffset);
     Vector3 position;
-    Vector3 rotation;
+    Vector3 angle;
     Vector3 scale;
     int unk44; // -1; Moderately well-correlated with layer count
     int unk48; Assert(unk48 == -1);
@@ -64,9 +64,9 @@ typedef struct (int version) {
     quad offset58 <format=hex>;
     quad commonOffset <format=hex>; Assert(commonOffset);
     quad typeOffset <format=hex>; Assert(typeOffset);
-    quad offset70 <format=hex>;
-    quad offset78 <format=hex>;
-    quad offset80 <format=hex>;
+    quad gparamOffset <format=hex>;
+    quad sceneGparamOffset <format=hex>;
+    quad grassOffset <format=hex>;
     quad offset88 <format=hex>; Assert(offset88);
     quad offset90 <format=hex>;
     quad offset98 <format=hex>; Assert(offset98);
@@ -109,21 +109,21 @@ typedef struct (int version) {
     }
     
     // Map, Ene, Hit, Dummy Obj, Dummy Ene, Geom
-    if (offset70) {
-        FSeek(start + offset70);
-        PartStruct70 struct70;
+    if (gparamOffset) {
+        FSeek(start + gparamOffset);
+        PartGparam gparam;
     }
     
     // Hit
-    if (offset78) {
-        FSeek(start + offset78);
-        PartStruct78 struct78;
+    if (sceneGparamOffset) {
+        FSeek(start + sceneGparamOffset);
+        PartSceneGparam sceneGparam;
     }
     
     // Map, Geom
-    if (offset80) {
-        FSeek(start + offset80);
-        PartStruct80 struct80;
+    if (grassOffset) {
+        FSeek(start + grassOffset);
+        PartGrass grass;
     }
     
     FSeek(start + offset88);
@@ -209,15 +209,15 @@ typedef struct {
 } PartCommon;
 
 typedef struct {
-    int unk00; // -1
-    int unk04; // -1
+    int lightId; // -1
+    int fogId; // -1; unverified
     int unk08 <hidden=true>; Assert(!unk08);
     int unk0c <hidden=true>; Assert(!unk0c);
     int unk10 <hidden=true>; Assert(!unk10);
     int unk14 <hidden=true>; Assert(!unk14);
     int unk18 <hidden=true>; Assert(!unk18);
     int unk1c <hidden=true>; Assert(!unk1c);
-} PartStruct70;
+} PartGparam;
 
 typedef struct {
     int unk00; Assert(!unk00);
@@ -243,18 +243,13 @@ typedef struct {
     int unk44 <hidden=true>; Assert(!unk44);
     int unk48 <hidden=true>; Assert(!unk48);
     int unk4c <hidden=true>; Assert(!unk4c);
-} PartStruct78;
+} PartSceneGparam;
 
 typedef struct {
-    int unk00;
-    int unk04;
-    int unk08;
-    int unk0c;
-    int unk10;
-    int unk14;
+    int grassTypeParamIds[6];
     int unk18; Assert(unk18 == -1);
     int unk1c <hidden=true>; Assert(!unk1c);
-} PartStruct80;
+} PartGrass;
 
 typedef struct {
     byte unk00; Assert(IsBool(unk00));
@@ -316,12 +311,12 @@ typedef struct {
     int unk04; Assert(!unk04);
     int npcThinkParamId;
     int npcParamId;
-    int unk10;
+    int talkId;
     short unk14; Assert(!unk14);
     short unk16;
     int charaInitParamId; // -1
     int partIndex; // -1; This is used twice ever in ACVI so hypothetically it could have changed
-    short patrolPointIndex; // -1; Local index in patrol points
+    short patrolPointIndex; // -1; Type index in patrol points
     short unk22; // -1
     int unk24; Assert(unk24 == -1);
     int unk28; Assert(!unk28);
@@ -430,7 +425,7 @@ typedef byte MapId[4] <read=Str("m%02d_%02d_%02d_%02d",
     this[0], this[1], this[2], this[3])>;
 
 typedef struct {
-    int hitPartIndex; // -1; Local index in hit parts
+    int parentHitIndex; // -1; Type index in hit parts
     MapId mapId;
     int unk08 <hidden=true>; Assert(!unk08);
     int unk0c <hidden=true>; Assert(!unk0c);

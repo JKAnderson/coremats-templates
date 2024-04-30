@@ -108,13 +108,13 @@ typedef struct (int version) {
     
     quad nameOffset <format=hex>; Assert(nameOffset);
     PointType type;
-    int localIndex;
+    int typeIndex; // Index among points of the same type
     FormType formType;
     Vector3 position;
-    Vector3 rotation;
-    int unk2c; // -1; not an index
-    quad indexListOffset30 <format=hex>; Assert(indexListOffset30);
-    quad indexListOffset38 <format=hex>; Assert(indexListOffset38);
+    Vector3 angle;
+    int unk2c; // -1; Not an index
+    quad parentListOffset <format=hex>; Assert(parentListOffset);
+    quad childListOffset <format=hex>; Assert(childListOffset);
     int unk78; // -1
     int unk7c; // -1
     quad formOffset <format=hex>;
@@ -126,12 +126,12 @@ typedef struct (int version) {
     wstring name;
     
     // Align: 4
-    FSeek(start + indexListOffset30);
-    PointIndexList pointIndices30;
+    FSeek(start + parentListOffset);
+    PointIndexList parentPoints;
     
     // Align: 4
-    FSeek(start + indexListOffset38);
-    PointIndexList pointIndices38;
+    FSeek(start + childListOffset);
+    PointIndexList childPoints;
     
     // Align: 8
     if (formOffset) {
@@ -208,8 +208,6 @@ typedef struct {
     int unk2c; Assert(!unk2c);
 } PointCommon;
 
-// In ACVI these are only used by MapGimmick, where they're definitely point indices
-// In prior games, they really don't look like point indices, so it is a mystery
 typedef struct {
     short indexCount;
     if (indexCount) {

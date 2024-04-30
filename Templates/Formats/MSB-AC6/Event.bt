@@ -57,7 +57,7 @@ typedef struct {
     quad nameOffset <format=hex>; Assert(nameOffset);
     int eventId; // -1
     EventType type;
-    int localIndex;
+    int typeIndex; // Index among events of the same type
     int unk14 <hidden=true>; Assert(!unk14);
     quad commonOffset <format=hex>; Assert(commonOffset);
     quad typeOffset <format=hex>;

@@ -30,7 +30,7 @@ typedef struct {
     
     quad nameOffset <format=hex>; Assert(nameOffset);
     ModelType type;
-    int localIndex; // Index among models of the same type
+    int typeIndex; // Index among models of the same type
     quad sourceOffset <format=hex>; Assert(sourceOffset);
     int instanceCount; // Number of parts using this model
     int unk1c <hidden=true>; Assert(!unk1c);
