@@ -343,6 +343,7 @@ typedef struct {
     quad offset70 <format=hex>;
     quad offset78 <format=hex>; Assert(offset78);
     
+    // This is absent exactly once, in m00_12_00_00
     if (offset70) {
         FSeek(start + offset70);
         struct {
