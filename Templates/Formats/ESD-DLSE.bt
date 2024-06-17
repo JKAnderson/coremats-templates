@@ -112,21 +112,6 @@ typedef struct {
 typedef struct {
     short type; Assert(GetTypeName(type) == "EzStateExternalEvent"
                     || GetTypeName(type) == "EzStateExternalEventT<ES_EVENT_PARAM_NUM_6>");
-    int version; Assert(version == 1);
-    int unk06; // Event ID?
-    int count0a;
-    if (count0a > 1) {
-        if (version == 1) {
-            EzStateEvaluator evaluators[count0a - 1]; // Arguments?
-        } else if (version == 2) {
-            Buffer buffers[count0a - 1]; // Arguments?
-        }
-    }
-} EzStateExternalEvent <read=GetTypeName(type), bgcolor=cAqua>;
-
-
-typedef struct {
-    short type; Assert(GetTypeName(type) == "EzStateExternalEventT<ES_EVENT_PARAM_NUM_6>");
     int version; Assert(version == 1 || version == 2);
     int unk06; // Event ID?
     int count0a;
@@ -137,7 +122,7 @@ typedef struct {
             Buffer buffers[count0a - 1]; // Arguments?
         }
     }
-} EzStateExternalEventT <read=GetTypeName(type), bgcolor=cAqua>;
+} EzStateExternalEvent <read=GetTypeName(type), bgcolor=cAqua>;
 
 
 typedef struct {
@@ -177,6 +162,7 @@ const int REF_BUCKET_SIZE <hidden=true> = REF_SIZE / REF_BUCKETS;
 struct {
     local int refCount = 0;
     local int refIds[REF_BUCKET_SIZE];
+    Printf("Please ignore this warning: ");
 } _buckets[REF_BUCKETS] <hidden=true, optimize=false>;
 
 int addReference(int id) {
@@ -239,7 +225,9 @@ string ReadReference(Reference &ref) {
 
 Header header;
 EzStateProject project;
+// Presumably a GUID or something; not a hash of anything in the file,
+// as DeS has two copies of t0821.esd which are identical other than this field
 quad unkX00 <format=hex, bgcolor=cLtPurple>;
 if (header.version == 3) {
-    Reference unkReferences[header.count0c];
+    Reference unkReferences(-1)[header.count0c];
 }
