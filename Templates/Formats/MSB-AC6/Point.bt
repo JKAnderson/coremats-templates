@@ -172,7 +172,7 @@ typedef struct (int version) {
             if (typeOffset) {
                 local int otherSize <hidden=true> = offset98 - typeOffset;
                 ubyte other[otherSize] <bgcolor=cPurple, fgcolor=cYellow>;
-                Printf("%d bytes of type data found in Other point %d\n", otherSize, localIndex);
+                Printf("%d bytes of type data found in Other point %d\n", otherSize, typeIndex);
             }
             break;
         
