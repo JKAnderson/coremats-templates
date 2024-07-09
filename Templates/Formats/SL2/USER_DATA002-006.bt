@@ -11,9 +11,12 @@
 //   History: 
 //------------------------------------------------
 
+#define COREMATS_ASMC_LIB
+
 #include "../../Common.bt"
 #include "../../Chunk.bt"
 #include "SL2-Types.bt"
+#include "../ASMC.bt"
 
 struct BlockDataDateTime;
 struct BlockDataThumbnail;
@@ -41,7 +44,7 @@ case "DateTime":
     
 case "Design":
     Assert(header.version == 0);
-    ubyte data[header.length];
+    ASMC design;
     break;
     
 case "Thumbnail":

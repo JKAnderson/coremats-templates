@@ -2,7 +2,7 @@
 //--- 010 Editor v14.0 Binary Template
 //
 //      File: EMBLEM.BT
-//   Authors: TKGP
+//   Authors: TKGP, B3
 //   Version: 
 //   Purpose: 
 //  Category: Coremats
@@ -63,16 +63,35 @@ typedef struct {
 } ChunkDataDateTime;
 
 
+// Thanks B3
+struct Piece;
 typedef struct {
-    short unk00;
-    short unk02;
-    ubyte unk04[0x14];
-} Piece;
+    short id;
+    short x;
+    short y;
+    short scaleX;
+    short scaleY;
+    short angle;
+    RGBA color;
+    short mode;
+    short unk12 <hidden=true>; Assert(!unk12);
+    
+    if ((id & 0x3f00) == 0x3f00) {
+        int childCount;
+        Piece children[childCount];
+    }
+} Piece <optimize=false>;
+
+typedef struct {
+    short unk00; Assert(unk00 == 3);
+    short unk02; Assert(unk02 == 1);
+    Piece pieces;
+} Layer <optimize=false>;
 
 typedef struct {
     short unk00; Assert(unk00 == 0);
-    short pieceCount;
-    Piece pieces[pieceCount];
+    short layerCount;
+    Layer layers[layerCount];
 } ChunkDataImage;
 
 //------------------------------------------------
@@ -85,7 +104,7 @@ EmblemChunk begin("---- begin ----");
 EmblemChunk category("Category");
 EmblemChunk ugcId("UgcID");
 if (PeekChunkSignature() == "CreatorID") {
-    EmblemChunk creatorID("CreatorID");
+    EmblemChunk creatorId("CreatorID");
 }
 EmblemChunk dateTime("DateTime");
 EmblemChunk image("Image");

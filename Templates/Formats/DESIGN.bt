@@ -172,7 +172,7 @@ typedef struct {
     int imageId;
     float unk04;
     float unk08;
-    int unk0c; Assert(!unk0c);
+    float unk0c;
     float unk10;
     float unk14;
     float unk18;
@@ -181,12 +181,13 @@ typedef struct {
     float unk24;
     int unk28; Assert(!unk28);
     int unk2c; Assert(!unk2c);
-    int unk30; Assert(!unk30);
-    int unk34; Assert(!unk34);
+    float unk30;
+    short unk34; Assert(!unk34);
+    short unk36;
     int unk38; Assert(!unk38);
-    byte unk3c; Assert(unk3c == -1);
-    byte unk3d; Assert(!unk3d);
-    byte unk3e; Assert(unk3e == 0x30);
+    byte unk3c;
+    byte unk3d; Assert(IsBool(unk3d));
+    byte unk3e;
     byte unk3f; Assert(IsBool(unk3f));
 } Decal <read=imageId, optimize=false>;
 

@@ -45,12 +45,12 @@ case "ClearInfo":
     break;
     
 case "Contribution":
-    Assert(header.version == 0 && header.length == 9);
+    Assert(header.version == 0);
     ubyte data[header.length];
     break;
     
 case "EquipmentLineup":
-    Assert(header.version == 0 && header.length == 0x2150);
+    Assert(header.version == 0);
     BlockDataEquipmentLineup equipmentLineup;
     break;
     
@@ -75,7 +75,7 @@ case "GameData_Misc":
     break;
     
 case "MissionAchieve":
-    Assert(header.version == 2 && header.length == 0x156);
+    Assert(header.version == 2);
     BlockDataMissionAchieve missionAchieve;
     break;
     
@@ -85,7 +85,7 @@ case "MissionFlag":
     break;
     
 case "NamePlateParts":
-    Assert(header.version == 0 && header.length == 4);
+    Assert(header.version == 0);
     ubyte data[header.length];
     break;
 
@@ -95,7 +95,7 @@ case "NpcArena":
     break;
     
 case "PartsToken":
-    Assert(header.version == 0 && header.length == 0x19e);
+    Assert(header.version == 0);
     ubyte data[header.length];
     break;
     
