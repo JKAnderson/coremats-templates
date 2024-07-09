@@ -1,0 +1,36 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: ASMC.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: 
+//  ID Bytes: 41 53 4D 43
+//   History: 
+//------------------------------------------------
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == "ASMC");
+    int unk04 <format=hex>; Assert(unk04 == 0x291222); // Looks like a date stamp
+    int compressedSize <format=hex>;
+    int uncompressedSize <format=hex>;
+} AsmcHeader <bgcolor=cLtRed>;
+
+//------------------------------------------------
+
+#ifdef COREMATS_ASMC_LIB
+typedef struct {
+#endif
+
+AsmcHeader header;
+ubyte data[header.compressedSize] <format=hex, bgcolor=cBlack, fgcolor=cWhite>;
+
+#ifdef COREMATS_ASMC_LIB
+} ASMC;
+#endif

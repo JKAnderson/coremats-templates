@@ -1,0 +1,96 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: EMBLEM.BT
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+#include "../Chunk.bt"
+
+struct ChunkDataDateTime;
+struct ChunkDataImage;
+
+LittleEndian();
+
+//------------------------------------------------
+
+COREMATS_CHUNK_START
+
+case "---- begin ----":
+case "----  end  ----":
+    Assert(header.version == 0 && header.length == 0);
+    break;
+    
+case "Category":
+    Assert(header.version == 0 && header.length == 1);
+    byte category;
+    break;
+
+case "CreatorID":
+    Assert(header.version == 0 && header.length == 8);
+    quad creatorId;
+    break;
+
+case "DateTime":
+    Assert(header.version == 0 && header.length == 0x10);
+    ChunkDataDateTime dateTime;
+    break;
+    
+case "Image":
+    Assert(header.version == 0);
+    ChunkDataImage image;
+    break;
+
+case "UgcID":
+    Assert(header.version == 0);
+    wstring ugcId;
+    break;
+    
+COREMATS_CHUNK_END EmblemChunk <read=ReadChunkHeader(header), optimize=false>;
+
+//------------------------------------------------
+
+typedef struct {
+    FILETIME fileTime;
+    PackedSystemTime systemTime;
+} ChunkDataDateTime;
+
+
+typedef struct {
+    short unk00;
+    short unk02;
+    ubyte unk04[0x14];
+} Piece;
+
+typedef struct {
+    short unk00; Assert(unk00 == 0);
+    short pieceCount;
+    Piece pieces[pieceCount];
+} ChunkDataImage;
+
+//------------------------------------------------
+
+#ifdef COREMATS_EMBLEM_LIB
+typedef struct {
+#endif
+
+EmblemChunk begin("---- begin ----");
+EmblemChunk category("Category");
+EmblemChunk ugcId("UgcID");
+if (PeekChunkSignature() == "CreatorID") {
+    EmblemChunk creatorID("CreatorID");
+}
+EmblemChunk dateTime("DateTime");
+EmblemChunk image("Image");
+EmblemChunk end("----  end  ----");
+
+#ifdef COREMATS_EMBLEM_LIB
+} Emblem;
+#endif

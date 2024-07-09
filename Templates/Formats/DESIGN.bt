@@ -1,0 +1,239 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: DESIGN.BT
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: 
+//  ID Bytes: 2D 2D 2D 2D 20 62 65 67 69 6E 20 2D 2D 2D 2D 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+#include "../Chunk.bt"
+
+#define COREMATS_EMBLEM_LIB
+#include "EMBLEM.bt"
+#undef COREMATS_EMBLEM_LIB
+
+struct ChunkDataAssemble;
+struct ChunkDataColoring;
+struct ChunkDataDecal;
+struct ChunkDataMarking;
+struct ChunkDataUserImage;
+
+LittleEndian();
+
+//------------------------------------------------
+
+COREMATS_CHUNK_START
+
+case "---- begin ----":
+case "----  end  ----":
+    Assert(header.version == 0 && header.length == 0);
+    break;
+    
+case "AcName":
+    Assert(header.version == 0);
+    wstring acName;
+    break;
+    
+case "Assemble":
+    Assert(header.version == 2 && header.length == 0x3c
+        || header.version == 3 && header.length == 0x40);
+    ChunkDataAssemble assemble(header.version);
+    break;
+
+case "Coloring":
+    Assert(header.version == 0 && header.length == 0x3b8
+        || header.version == 2 && header.length == 0x3b8
+        || header.version == 3 && header.length == 0x3b8);
+    ChunkDataColoring coloring;
+    break;
+
+case "CreatorID":
+    Assert(header.version == 0 && header.length == 8);
+    quad creatorId;
+    break;
+
+case "DataName":
+    Assert(header.version == 0);
+    wstring dataName;
+    break;
+    
+case "Decal":
+    Assert(header.version == 1);
+    ChunkDataDecal decal;
+    break;
+
+case "Marking":
+    Assert(header.version == 0 && header.length == 0x3c
+        || header.version == 1 && header.length == 0x44
+        || header.version == 2 && header.length == 0x55);
+    ChunkDataMarking marking(header.version);
+    break;
+
+case "UgcID":
+    Assert(header.version == 0);
+    wstring ugcId;
+    break;
+    
+case "UserImage":
+    Assert(header.version == 0);
+    ChunkDataUserImage userImage;
+    break;
+
+COREMATS_CHUNK_END DesignChunk <read=ReadChunkHeader(header), optimize=false>;
+
+//------------------------------------------------
+
+// +0x0000000 Weapon
+// +0x1000000 Protector
+// +0x5000000 Generator
+// +0x6000000 Booster
+// +0x7000000 FCS
+// -1 is sometimes given as 0x0fffffff
+typedef struct (int version) {
+    int headProtectorId <read=MaskItemId>;
+    int coreProtectorId <read=MaskItemId>;
+    int armsProtectorId <read=MaskItemId>;
+    int legsProtectorId <read=MaskItemId>;
+    int boosterId <read=MaskItemId>;
+    int generatorId <read=MaskItemId>;
+    int fcsId <read=MaskItemId>;
+    int unk1c; Assert(unk1c == -1);
+    int leftWeaponId <read=MaskItemId>;
+    int rightWeaponId <read=MaskItemId>;
+    int leftBackWeaponId <read=MaskItemId>;
+    int rightBackWeaponId <read=MaskItemId>;
+    int leftBackMountWeaponId <read=MaskItemId>; // 299300
+    int rightBackMountWeaponId <read=MaskItemId>; // 299100, 299300
+    // Usually -1, 40000200 in (7000000.design, 09990000.design, 09990002.design)
+    int unk38 <read=MaskItemId>;
+    if (version == 3) {
+        int coreExpansionWeaponId <read=MaskItemId>;
+    }
+} ChunkDataAssemble;
+
+string MaskItemId(int id) {
+    return Str("%8d (%8Xh)", id << 4 >> 4, id);
+}
+
+
+typedef struct {
+    int unk00; Assert(unk00 == 0xff);
+    short weathering;
+    short unk06;
+    RGBA colors[6];
+    short materials[6];
+    byte patternDesign;
+    byte patternSize;
+    short unk2e;
+    RGBA patternColors[4];
+    short unk40 <format=hex>;
+    short unk42 <format=hex>;
+} ColorSet <read=ReadRGBA(colors[0]), optimize=false>;
+
+typedef struct {
+    // Head
+    // Core
+    // Right arm
+    // Left arm
+    // Legs
+    // Right weapon
+    // Unknown
+    // Unknown
+    // Left weapon
+    // Unknown
+    // Unknown
+    // Unknown
+    // Right back
+    // Left back
+    ColorSet colorSets[14];
+} ChunkDataColoring;
+
+
+typedef struct {
+    int id;
+    Emblem emblem;
+} UserImage <optimize=false>;
+
+typedef struct {
+    int imageCount;
+    if (imageCount) {
+        UserImage images[imageCount];
+    }
+} ChunkDataUserImage;
+
+
+typedef struct {
+    int imageId;
+    float unk04;
+    float unk08;
+    int unk0c; Assert(!unk0c);
+    float unk10;
+    float unk14;
+    float unk18;
+    float unk1c;
+    float unk20;
+    float unk24;
+    int unk28; Assert(!unk28);
+    int unk2c; Assert(!unk2c);
+    int unk30; Assert(!unk30);
+    int unk34; Assert(!unk34);
+    int unk38; Assert(!unk38);
+    byte unk3c; Assert(unk3c == -1);
+    byte unk3d; Assert(!unk3d);
+    byte unk3e; Assert(unk3e == 0x30);
+    byte unk3f; Assert(IsBool(unk3f));
+} Decal <read=imageId, optimize=false>;
+
+typedef struct {
+    int decalCount <fgcolor=cBlack>;
+    if (decalCount) {
+        Decal decals[decalCount];
+    }
+} DecalSlot <optimize=false>;
+
+typedef struct {
+    DecalSlot decalSlots[5];
+} ChunkDataDecal;
+
+
+// Older versions are an educated guess, please verify them eventually
+typedef struct (int version) {
+    local int slotCount <hidden=true>;
+    switch (version) {
+        case 0: slotCount = 15; break;
+        case 1:
+        case 2: slotCount = 17; break;
+    }
+    
+    int decalIds[slotCount];
+    if (version == 2) {
+        // When 1, the current player emblem is displayed in that slot
+        byte useEmblem[slotCount];
+    }
+} ChunkDataMarking;
+
+//------------------------------------------------
+
+DesignChunk begin("---- begin ----");
+if (PeekChunkSignature() == "UgcID") {
+    DesignChunk ugcId("UgcID");
+}
+if (PeekChunkSignature() == "CreatorID") {
+    DesignChunk creatorId("CreatorID");
+}
+if (PeekChunkSignature() == "DataName") {
+    DesignChunk dataName("DataName");
+}
+DesignChunk acName("AcName");
+DesignChunk assemble("Assemble");
+DesignChunk coloring("Coloring");
+DesignChunk userImage("UserImage");
+DesignChunk decal("Decal");
+DesignChunk marking("Marking");
+DesignChunk end("----  end  ----");
