@@ -17,8 +17,15 @@
 //------------------------------------------------
 
 void Align(int alignment) {
-    if (FTell() % alignment)
-        FSkip(alignment - FTell() % alignment);
+    local int delta = FTell() % alignment;
+    if (delta)
+        FSkip(alignment - delta);
+}
+
+void AlignRelative(int base, int alignment) {
+    local int delta = (FTell() - base) % alignment;
+    if (delta)
+        FSkip(alignment - delta);
 }
 
 int IsBool(int value) {

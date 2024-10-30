@@ -264,7 +264,7 @@ String strings[header.stringCount];
 EnvDef envDefs[header.envDefCount];
 Transition transitions[header.transitionCount];
 EventDef eventDefs[header.eventDefCount];
-Event events[header.eventCount];
+Event events[header.eventCount]; AlignRelative(DATA_START, GetPintSize());
 TransitionEvent transitionEvents[header.transitionEventCount];
 State states[header.stateCount];
 Machine machines[header.machineCount];
