@@ -1,0 +1,271 @@
+//------------------------------------------------
+//--- 010 Editor v14.0.1 Binary Template
+//
+//      File: EDD.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: *.edd
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+
+const int DATA_START <hidden=true> = 0x94;
+
+struct String;
+struct EnvDef;
+struct EventDef;
+struct Machine;
+
+LittleEndian();
+
+//------------------------------------------------
+
+void PadMaybe() {
+    if (header.is64Bit) {
+        int pad <hidden=true>; Assert(!pad);
+    }
+}
+
+typedef struct {
+    char magic[4];
+    Assert((magic[0] == 'f' || magic[0] == 'F')
+        && (magic[1] == 's' || magic[1] == 'S')
+        &&  magic[2] == 'S'
+        &&  magic[3] == 'L');
+    local int bigEndian = magic[0] == 'F';
+    SetEndian(bigEndian);
+    local int is64Bit = magic[1] == 's';
+    PINT_64BIT = is64Bit;
+    
+    int unk04; Assert(unk04 == 1);
+    int version; Assert(version == 1 || version == 2);
+    int unk0c; Assert(unk0c == version);
+    int dataStart <format=hex>; Assert(dataStart == 0x7c);
+    int dataLength <format=hex>;
+    
+    int structCount; Assert(structCount == 11);
+    int projectSize <format=hex>; Assert(projectSize == (is64Bit ? 0x58 : 0x34));
+    int projectCount; Assert(projectCount == 1);
+    int stringSize <format=hex>; Assert(stringSize == (is64Bit ? 0x10 : 0x8));
+    int stringCount;
+    int sizeC <format=hex, hidden=true>; Assert(sizeC == 0x4);
+    int countC <hidden=true>; Assert(countC == 0);
+    int envDefSize <format=hex>; Assert(envDefSize == 0x8);
+    int envDefCount;
+    int transitionSize <format=hex>; Assert(transitionSize == (is64Bit ? 0x10 : 0x8));
+    int transitionCount;
+    int sizeF <format=hex, hidden=true>; Assert(sizeF == (is64Bit ? 0x10 : 0x8));
+    int countF <hidden=true>; Assert(countF == 0);
+    int eventDefSize <format=hex>; Assert(eventDefSize == (is64Bit ? 0x18 : 0x10));
+    int eventDefCount;
+    int eventSize <format=hex>; Assert(eventSize == 0x4);
+    int eventCount;
+    int transitionEventSize <format=hex>; Assert(transitionEventSize == (is64Bit ? 0x10 : 0x8));
+    int transitionEventCount;
+    int stateSize <format=hex>; Assert(stateSize == (is64Bit ? 0x78 : 0x3c));
+    int stateCount;
+    int machineSize <format=hex>; Assert(machineSize == (is64Bit ? 0x48 : 0x30));
+    int machineCount;
+    
+    int offset74 <format=hex, hidden=true>;
+    int count78 <hidden=true>; Assert(!count78);
+    int stringsOffset <format=hex>;
+    int stringsLength; // In "characters"; includes indirect name indices
+    int offset84 <format=hex, hidden=true>;
+    int count88 <hidden=true>; Assert(!count88);
+    int offset8c <format=hex, hidden=true>;
+    int count90 <hidden=true>; Assert(!count90);
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    int unk00; Assert(!unk00);
+    PadMaybe();
+    pintx eventDefsOffset;
+    pintd eventDefCount;
+    pintx envDefsOffset;
+    pintd envDefCount;
+    pintx machinesOffset;
+    int machineCount;
+    ubyte unk1c[0x10];
+    PadMaybe();
+    pintx stringsOffset;
+    pintd stringCount;
+    
+    PushTell();
+    FSeek(DATA_START + stringsOffset.v);
+    String strings[stringCount.v];
+    FSeek(DATA_START + eventDefsOffset.v);
+    EventDef eventDefs[eventDefCount.v];
+    FSeek(DATA_START + envDefsOffset.v);
+    EnvDef envDefs[envDefCount.v];
+    FSeek(DATA_START + machinesOffset.v);
+    Machine machines[machineCount];
+    SeekPop();
+} Project <bgcolor=cLtGreen, optimize=false>;
+
+
+typedef struct {
+    pintx offset;
+    pintd length;
+    
+    JumpIn(DATA_START + offset.v);
+    wchar_t str[length.v];
+    JumpOut();
+} String <read=str, bgcolor=cGreen, optimize=false>;
+
+
+typedef struct {
+    int id;
+    short nameIndex;
+    short unk06; // Bytes?
+    
+    local wstring name = project.strings[nameIndex].str;
+} EnvDef <read=(Str("%d ", id) + name), bgcolor=cLtYellow, optimize=false>;
+
+
+typedef struct {
+    pintx unk00; Assert(unk00.v == -1);
+    pintd unk04; Assert(!unk04.v);
+} Transition <bgcolor=cYellow, optimize=false>;
+
+
+typedef struct {
+    int id;
+    PadMaybe();
+    pintx unk04 <hidden=true>; Assert(unk04.v == -1);
+    int unk08 <hidden=true>; Assert(!unk08);
+    short nameIndex;
+    short unk0e; // Bytes?
+    
+    local wstring name = project.strings[nameIndex].str;
+} EventDef <read=(Str("%d ", id) + name), bgcolor=cLtAqua, optimize=false>;
+
+
+typedef struct {
+    short nameIndex;
+    byte unk02; Assert(unk02 == 1);
+    byte unk03; Assert(unk03 == -1);
+    
+    local wstring name = project.strings[nameIndex].str;
+} Event <read=name, bgcolor=cAqua, optimize=false>;
+
+
+typedef struct {
+    pintx passEventsOffset;
+    pintd passEventCount;
+    
+    if (passEventCount.v) {
+        JumpIn(DATA_START + passEventsOffset.v);
+        Event passEvents[passEventCount.v];
+        JumpOut();
+    }
+} TransitionEvent <bgcolor=cDkAqua, optimize=false>;
+
+
+typedef struct {
+    int id;
+    PadMaybe();
+    pintx stringIndicesOffset;
+    pintd stringCount; Assert(stringCount.v == 1);
+    pintx entryEventsOffset;
+    pintd entryEventCount;
+    pintx exitEventsOffset;
+    pintd exitEventCount;
+    pintx whileEventsOffset;
+    pintd whileEventCount;
+    pintx transitionEventsOffset;
+    pintd transitionEventCount;
+    pintx transitionsOffset;
+    pintd transitionCount;
+    pintx unk34 <hidden=true>; Assert(unk34.v == -1);
+    pintd unk38 <hidden=true>; Assert(!unk38.v);
+    
+    PushTell();
+    FSeek(DATA_START + stringIndicesOffset.v);
+    short nameIndex;
+    if (entryEventCount.v) {
+        FSeek(DATA_START + entryEventsOffset.v);
+        Event entryEvents[entryEventCount.v];
+    }
+    if (exitEventCount.v) {
+        FSeek(DATA_START + exitEventsOffset.v);
+        Event exitEvents[exitEventCount.v];
+    }
+    if (whileEventCount.v) {
+        FSeek(DATA_START + whileEventsOffset.v);
+        Event whileEvents[whileEventCount.v];
+    }
+    if (transitionEventCount.v) {
+        FSeek(DATA_START + transitionEventsOffset.v);
+        TransitionEvent transitionEvents[transitionEventCount.v];
+    }
+    if (transitionCount.v) {
+        FSeek(DATA_START + transitionsOffset.v);
+        Transition transitions[transitionCount.v];
+    }
+    SeekPop();
+    
+    local wstring name = project.strings[nameIndex].str;
+} State <read=(Str("%d ", id) + name), bgcolor=cLtPurple, optimize=false>;
+
+
+typedef struct {
+    int id;
+    short nameIndex;
+    short unk06; // Bytes?
+    if (header.version == 1) {
+        short parameterNameIndices[8];
+        local int parameterCount <hidden=true> = 8;
+    } else if (header.version == 2) {
+        pintx parameterNameIndicesOffset;
+        int parameterCount;
+        PadMaybe();
+    }
+    pintx unk18 <hidden=true>; Assert(unk18.v == -1);
+    pintd unk1c <hidden=true>; Assert(!unk1c.v);
+    pintx unk20 <hidden=true>; Assert(unk20.v == -1);
+    pintd unk24 <hidden=true>; Assert(!unk24.v);
+    pintx statesOffset;
+    pintd stateCount;
+    
+    PushTell();
+    FSeek(DATA_START + statesOffset.v);
+    State states[stateCount.v];
+    if (header.version == 2 && parameterCount) {
+        FSeek(DATA_START + parameterNameIndicesOffset.v);
+        short parameterNameIndices[parameterCount];
+    }
+    SeekPop();
+    
+    local wstring name = project.strings[nameIndex].str;
+    if (parameterCount) {
+        local struct { local wstring str; } parameterNames[parameterCount] <read=str>;
+        local int i <hidden=true>;
+        for (i = 0; i < parameterCount; i++) {
+            if (parameterNameIndices[i] != -1) {
+                parameterNames[i].str = project.strings[parameterNameIndices[i]].str;
+            }
+        }
+    }
+} Machine <read=(Str("%d ", id) + name), bgcolor=cPurple, optimize=false>;
+
+//------------------------------------------------
+
+Header header;
+Project project;
+
+/* Uncomment to read flat
+String strings[header.stringCount];
+EnvDef envDefs[header.envDefCount];
+Transition transitions[header.transitionCount];
+EventDef eventDefs[header.eventDefCount];
+Event events[header.eventCount];
+TransitionEvent transitionEvents[header.transitionEventCount];
+State states[header.stateCount];
+Machine machines[header.machineCount];
+//*/
