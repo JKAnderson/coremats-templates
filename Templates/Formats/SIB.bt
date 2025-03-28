@@ -1,0 +1,178 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: SIB.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: *.sib
+//  ID Bytes: [+40] 53 49 42 20
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+
+LittleEndian();
+
+struct Object;
+
+//------------------------------------------------
+
+typedef struct (ubyte assert) {
+    ubyte mark; Assert(mark == assert);
+    Align(4); // A point of philosophical contention
+} Mark <read=Str("%02xh", mark), bgcolor=cWhite, fgcolor=cBlack>;
+
+
+typedef struct {
+    Mark mark(1);
+    Object value;
+} Struct01 <bgcolor=cLtRed>;
+
+typedef struct {
+    Mark mark(3);
+    int count;
+    if (count) {
+        Object value[count];
+    }
+} Struct03 <bgcolor=cLtRed>;
+
+typedef struct {
+    Mark mark(4);
+    int count;
+    if (count) {
+        Object value[count];
+    }
+} Struct04 <bgcolor=cLtRed>;
+
+
+typedef struct {
+    Mark mark(0x1a);
+    float value[3] <bgcolor=cYellow>;
+} Struct1A <bgcolor=cLtYellow>;
+
+typedef struct {
+    Mark mark(0x34);
+    int value <bgcolor=cAqua>;
+} Struct34 <read=value, bgcolor=cLtAqua>;
+
+typedef struct {
+    Mark mark(0x35);
+    int value <bgcolor=cAqua>;
+} Struct35 <read=value, bgcolor=cLtAqua>;
+
+typedef struct {
+    Mark mark(0x3a);
+    float value <bgcolor=cYellow>;
+} Struct3A <read=value, bgcolor=cLtYellow>;
+
+typedef struct {
+    Mark mark(0x44);
+    int value[2] <bgcolor=cAqua>;
+} Struct44 <bgcolor=cLtAqua>;
+
+typedef struct {
+    Mark mark(0x5a);
+    int unk00; Assert(!unk00);
+    int unk04; Assert(!unk04);
+    float unk08 <bgcolor=cYellow>;
+    float unk0c <bgcolor=cYellow>;
+} Struct5A <bgcolor=cLtYellow>;
+
+typedef struct {
+    Mark mark(0x66);
+    int unk00; Assert(unk00 == 1);
+    int count; Assert(count == 3);
+    float value[count] <bgcolor=cYellow>;
+} Struct66 <bgcolor=cLtYellow>;
+
+typedef struct {
+    Mark mark(0xa3);
+    int length <format=hex>;
+    if (length) {
+        char value[length] <bgcolor=cGreen>;
+    }
+} String <read=('"' + StringToWString(length ? value : "", CHARSET_JAPANESE) + '"'), bgcolor=cLtGreen>;
+
+
+typedef struct {
+    Mark mark(0xb4);
+    int count;
+    int value[count] <bgcolor=cAqua>;
+} StructB4 <bgcolor=cLtAqua>;
+
+typedef struct {
+    Mark mark(0xba);
+    int count;
+    float value[count] <bgcolor=cYellow>;
+} StructBA <bgcolor=cLtYellow>;
+
+typedef struct {
+    Mark mark(0xc4);
+    int count;
+    int value[count] <bgcolor=cAqua>;
+} StructC4 <bgcolor=cLtAqua>;
+
+typedef struct {
+    Mark mark(0xc5);
+    int count;
+    if (count) {
+        int value[count] <bgcolor=cAqua>;
+    }
+} StructC5 <bgcolor=cLtAqua>;
+
+typedef struct {
+    Mark mark(0xca);
+    int count;
+    float value[count] <bgcolor=cYellow>;
+} StructCA <bgcolor=cLtYellow>;
+
+typedef struct {
+    Mark mark(0xe3);
+    int count; Assert(count == 1);
+    int length <format=hex>;
+    if (length) {
+        char value[length] <bgcolor=cGreen>;
+    }
+} StructE3 <read=('"' + StringToWString(length ? value : "", CHARSET_JAPANESE) + '"'), bgcolor=cLtGreen>;
+
+
+typedef struct {
+    Align(4); // Debate ensues
+    Mark mark(0);
+    int length <format=hex>;
+    int type <format=hex>;
+    int count;
+    local int end <hidden=true> = FTell() + length - 8;
+    
+    local int i <hidden=true>;
+    for (i = 0; i < count; i++) {
+        switch (ReadUByte()) {
+            case 0x01: Struct01 children; break;
+            case 0x03: Struct03 children; break;
+            case 0x04: Struct04 children; break;
+            case 0x1a: Struct1A children; break;
+            case 0x34: Struct34 children; break;
+            case 0x35: Struct35 children; break;
+            case 0x3a: Struct3A children; break;
+            case 0x44: Struct44 children; break;
+            case 0x5a: Struct5A children; break;
+            case 0x66: Struct66 children; break;
+            case 0xa3: String children; break;
+            case 0xb4: StructB4 children; break;
+            case 0xba: StructBA children; break;
+            case 0xc4: StructC4 children; break;
+            case 0xc5: StructC5 children; break;
+            case 0xca: StructCA children; break;
+            case 0xe3: StructE3 children; break;
+            default: Assert(false, Str("Missing mark: %02xh", ReadUByte()));
+        }
+    }
+    
+    Assert(FTell() == end);
+} Object <bgcolor=cRed, optimize=false>;
+
+//------------------------------------------------
+
+Object file <open=true>;
