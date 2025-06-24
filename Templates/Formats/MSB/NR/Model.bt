@@ -1,8 +1,8 @@
 //------------------------------------------------
 //--- 010 Editor v14.0 Binary Template
 //
-//      File: MSB-AC6/Model.bt
-//   Authors: 
+//      File: MSB/NR/Model.bt
+//   Authors: TKGP
 //   Version: 
 //   Purpose: 
 //  Category: 
@@ -30,8 +30,8 @@ typedef struct {
     
     quad nameOffset <format=hex>; Assert(nameOffset);
     ModelType type;
-    int typeIndex; // Index among models of the same type
-    quad sourceOffset <format=hex>; Assert(sourceOffset);
+    int typeIndex;
+    quad fileOffset <format=hex>; Assert(fileOffset);
     int instanceCount; // Number of parts using this model
     int unk1c <hidden=true>; Assert(!unk1c);
     int unk20 <hidden=true>; Assert(!unk20);
@@ -40,20 +40,22 @@ typedef struct {
     FSeek(start + nameOffset);
     wstring name;
     
-    FSeek(start + sourceOffset);
-    wstring sourcePath; // Path to a .sib or .hkt file
+    FSeek(start + fileOffset);
+    wstring file; // Path to a .sib or .hkt file
     
     switch (type) {
         case M_MAP:
         case M_ENE:
         case M_PLAYER:
         case M_HIT:
+        case M_DUMMY_ENE:
+        case M_INVALID:
         case M_GEOM: break;
         
-        default: Assert(false, Str("Unexpected model type: %d"));    
+        default: Assert(false, Str("Unknown model type: %d", type));    
     }
 } Model <read=ReadModel, bgcolor=cLtGreen>;
 
-wstring ReadModel(Model &model) {
-    return Str("<%s> ", EnumToString(model.type)) + model.name;    
+wstring ReadModel(Model &m) {
+    return Str("[%4d] <%s> ", m.typeIndex, EnumToString(m.type)) + m.name;    
 }

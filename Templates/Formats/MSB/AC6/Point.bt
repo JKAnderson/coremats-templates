@@ -1,8 +1,8 @@
 //------------------------------------------------
 //--- 010 Editor v14.0 Binary Template
 //
-//      File: MSB-AC6/Point.bt
-//   Authors: 
+//      File: MSB/AC6/Point.bt
+//   Authors: TKGP
 //   Version: 
 //   Purpose: 
 //  Category: 
@@ -11,7 +11,7 @@
 //   History: 
 //------------------------------------------------
 
-#include "Form.bt"
+#include "../Form.bt"
 
 enum <int> PointType {
     //PointType = 0, //Unused
