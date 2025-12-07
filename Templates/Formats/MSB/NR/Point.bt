@@ -74,6 +74,7 @@ enum <int> PointType {
     PointTypeRespawnOverride = 57, // リスポンポイント無効領域
     PointTypeUserEdgeRemovalInner = 58, // ユーザーエッジ削除(内側)
     PointTypeUserEdgeRemovalOuter = 59, // ユーザーエッジ削除(外側)
+    PointTypeBigJumpSealable = 60, // DLC騎乗大ジャンプポイント_封印可能
     PointTypeOther = -1,
 };
 
@@ -106,6 +107,7 @@ struct PointBirdRoute;
 struct PointRespawnOverride;
 struct PointUserEdgeRemovalInner;
 struct PointUserEdgeRemovalOuter;
+struct PointBigJumpSealable;
 
 //------------------------------------------------
 
@@ -173,7 +175,8 @@ typedef struct {
         case PointTypeBirdRoute:
         case PointTypeRespawnOverride:
         case PointTypeUserEdgeRemovalInner:
-        case PointTypeUserEdgeRemovalOuter: Assert(typeOffset); break;
+        case PointTypeUserEdgeRemovalOuter:
+        case PointTypeBigJumpSealable: Assert(typeOffset); break;
         
         case PointTypeMidRangeEnvMapOutput:
         case PointTypeClearInfo:
@@ -211,6 +214,7 @@ typedef struct {
             case PointTypeRespawnOverride: PointRespawnOverride respawnOverride; break;
             case PointTypeUserEdgeRemovalInner: PointUserEdgeRemovalInner userEdgeRemovalInner; break;
             case PointTypeUserEdgeRemovalOuter: PointUserEdgeRemovalOuter userEdgeRemovalOuter; break;
+            case PointTypeBigJumpSealable: PointBigJumpSealable bigJumpSealable; break;
             default: Assert(false);
         }
     }
@@ -233,7 +237,7 @@ typedef struct {
     byte unk08; // -1
     byte unk09 <hidden=true>; Assert(!unk09);
     short unk0a <hidden=true>; Assert(!unk0a);
-    int unk0c <hidden=true>; Assert(!unk0c);
+    int unk0c; // 0
     int variation; // -1
     int unk14 <hidden=true>; Assert(!unk14);
     int unk18 <hidden=true>; Assert(!unk18);
@@ -315,7 +319,7 @@ typedef struct {
 } PointReturnPoint;
 
 typedef struct {
-	float unk00 <hidden=true>; Assert(unk00 == 0.0);
+    float unk00; // 0
     float unk04; // 0
     byte unk08; Assert(IsBool(unk08)); // 0
     byte unk09 <hidden=true>; Assert(unk09 == 10);
@@ -501,3 +505,12 @@ typedef struct {
 	int unk00 <hidden=true>; Assert(!unk00);
     int unk04 <hidden=true>; Assert(!unk04);
 } PointUserEdgeRemovalOuter;
+
+typedef struct {
+    float unk00; // 20
+    int unk04; // 807103
+    int unk08; // Probably a flag
+    int unk0c; // -1
+    int unk10; // 200
+    int unk14; // -1
+} PointBigJumpSealable;

@@ -32,6 +32,10 @@ LittleEndian();
 
 typedef struct (wstring assertName) {
     ParamHeader header; Assert(header.name == assertName);
+    Assert(header.version == 75 
+        || header.version == 78 
+        || header.version == 79 
+        || header.version == 80);
     
     local int i <hidden=true>;
     for (i = 0; i < header.count - 1; i++) {

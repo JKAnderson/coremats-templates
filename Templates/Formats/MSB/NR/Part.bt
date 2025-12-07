@@ -263,7 +263,7 @@ typedef struct {
 } PartGrass;
 
 typedef struct {
-    int unk00 <hidden=true>; Assert(!unk00);
+    int unk00; // 0
     int unk04 <hidden=true>; Assert(!unk04);
     int unk08 <hidden=true>; Assert(!unk08);
     int unk0c <hidden=true>; Assert(!unk0c);
@@ -350,11 +350,11 @@ typedef struct {
     int unk44; // 0
     int unk48; // 0
     int unk4c; // 0
-    int unk50 <hidden=true>; Assert(!unk50);
-    int unk54 <hidden=true>; Assert(!unk54);
-    int unk58 <hidden=true>; Assert(!unk58);
-    int unk5c <hidden=true>; Assert(!unk5c);
-    int unk60 <hidden=true>; Assert(!unk60);
+    int unk50; // 0
+    int unk54; // -1
+    int unk58; // 0
+    int unk5c; // -1
+    int unk60; // 0
     int unk64 <hidden=true>; Assert(!unk64);
     int unk68 <hidden=true>; Assert(!unk68);
     int unk6c <hidden=true>; Assert(!unk6c);
@@ -388,7 +388,7 @@ typedef struct {
     byte unk00;
     byte unk01 <hidden=true>; Assert(unk01 == -1);
     byte unk02; // -1
-    byte unk03 <hidden=true>; Assert(!unk03);
+    byte unk03; Assert(IsBool(unk03)); // 0
     float unk04; // 0
     int unk08 <hidden=true>; Assert(!unk08);
     int unk0c <hidden=true>; Assert(!unk0c);
@@ -433,7 +433,7 @@ typedef struct {
     short unk08 <hidden=true>; Assert(!unk08);
     byte unk0a; // -1
     byte unk0b; Assert(IsBool(unk0b)); // 0
-    int unk0c <hidden=true>; Assert(!unk0c);
+    int unk0c; // 0
 } PartConnectHit;
 
 typedef struct {
@@ -460,7 +460,7 @@ typedef struct {
     int unk30 <hidden=true>; Assert(unk30 == -1);
     int unk34; // -1
     int partIndex38; // -1
-    int unk3c <hidden=true>; Assert(unk3c == -1);
+    int partIndex3c; // -1
     int partIndex40; // -1
     int partIndex44; // -1
     int partIndex48; // -1
@@ -505,7 +505,7 @@ typedef struct {
         int unk08 <hidden=true>; Assert(unk08 == -1);
         int unk0c <hidden=true>; Assert(!unk0c);
         int unk10 <hidden=true>; Assert(!unk10);
-        float unk14 <hidden=true>; Assert(unk14 == -1.0);
+        float unk14; // -1
         int unk18 <hidden=true>; Assert(!unk18);
         byte unk1c; // -1
         byte unk1d <hidden=true>; Assert(unk1d == -1);
