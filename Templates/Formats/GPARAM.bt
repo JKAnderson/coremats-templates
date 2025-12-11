@@ -44,9 +44,9 @@ typedef struct {
     } else {
         string str;
     }
-} GP_STRING <read=ReadGpString>;
+} GpString <read=ReadGpString>;
 
-wstring ReadGpString(GP_STRING &gs) {
+wstring ReadGpString(GpString &gs) {
     if (GP_WIDE_STRINGS) {
         return gs.str;
     } else {
@@ -62,7 +62,7 @@ typedef struct {
     } else {
         char magic[4];
     } Assert(magic == "filt");
-    int version; Assert(version == 2 || version == 3 || version == 5);
+    int version; Assert(version == 2 || version == 3 || version == 5 || version == 6);
     byte unk0c; Assert(unk0c == 0);
     byte unk0d; Assert(unk0d == 0 || unk0d == 1);
     short unk0e <hidden=true>; Assert(unk0e == 0);
@@ -91,9 +91,9 @@ typedef struct {
 typedef struct {
     int fieldCount;
     int fieldOffsetsOffset <format=hex>;
-    GP_STRING key;
+    GpString key;
     if (header.version >= 3) {
-        GP_STRING name;
+        GpString name;
     }
     
     if (fieldCount == 0) return;
@@ -119,7 +119,7 @@ wstring ReadParam(Param &param) {
 }
 
 
-// Commented values are somewhat speculative
+// Commented types are supported in the binary but not found in any real files (that I know of)
 enum <byte> GP_TYPE {
     GP_SBYTE = 1,
     GP_SSHORT = 2,
@@ -136,17 +136,24 @@ enum <byte> GP_TYPE {
     GP_VEC3 = 13,
     GP_VEC4 = 14,
     GP_COLOR = 15,
+    //GP_STRING = 16,
 };
 
 typedef struct {
     int valuesOffset <format=hex>;
     int valueIdsOffset <format=hex>;
-    GP_TYPE valueType;
-    ubyte valueCount;
-    short unk0a <hidden=true>; Assert(unk0a == 0);
-    GP_STRING key;
+    if (header.version >= 6) {
+        short valueCount;
+        GP_TYPE valueType;
+        byte unk0b <hidden=true>; Assert(!unk0b);
+    } else {
+        GP_TYPE valueType;
+        ubyte valueCount;
+        short unk0a <hidden=true>; Assert(!unk0a);
+    }
+    GpString key;
     if (header.version >= 3) {
-        GP_STRING name;
+        GpString name;
     }
     
     if (valueCount == 0) return;
