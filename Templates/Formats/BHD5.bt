@@ -1,0 +1,141 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: BHD5.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: 
+//  ID Bytes: 42 48 44 35
+//   History: 
+//------------------------------------------------
+
+// This isn't recorded in the file anywhere, so it must be specified manually
+local enum {
+    BHD5FORMAT_DARKSOULS,
+    BHD5FORMAT_DARKSOULSREMASTERED,
+    BHD5FORMAT_DARKSOULS2,
+    BHD5FORMAT_DARKSOULS3,
+    BHD5FORMAT_ELDENRING,
+} format = BHD5FORMAT_ELDENRING;
+
+//------------------------------------------------
+
+#include "../Common.bt"
+
+struct File;
+struct Hash;
+struct Encryption;
+struct Range;
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == "BHD5");
+    byte littleEndian; Assert(littleEndian == 0 || littleEndian == -1); SetEndian(!littleEndian);
+    // This correlates perfectly with whether the file ever uses the hashing/encryption structs
+    byte unk05; Assert(IsBool(unk05));
+    short unk06 <hidden=true>; Assert(!unk06);
+    int unk08; Assert(unk08 == 1);
+    int fileSize <format=hex>;
+    int bucketCount;
+    if (format == BHD5FORMAT_DARKSOULSREMASTERED) {
+        int unk14 <hidden=true>; Assert(!unk14);
+        quad bucketsOffset <format=hex>;
+    } else {
+        int bucketsOffset <format=hex>;
+    }
+    if (format >= BHD5FORMAT_DARKSOULS2) {
+        int saltLength;
+        char salt[saltLength];
+    }
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    int count;
+    if (format == BHD5FORMAT_DARKSOULSREMASTERED) {
+        int unk04; Assert(unk04 == 1);
+        quad offset <format=hex>;
+    } else {
+        int offset <format=hex>;
+    }
+    
+    if (count) {
+        local quad pos <hidden=true> = FTell();
+        FSeek(offset);
+        File files[count];
+        FSeek(pos);
+    }
+} Bucket <read=Str("[%2d]", count), bgcolor=cAqua, optimize=false>;
+
+
+typedef struct {
+    if (format >= BHD5FORMAT_ELDENRING) {
+        uquad pathHash <format=hex>;
+        int paddedDataLength <format=hex>;
+        int unpaddedDataLength <format=hex>;
+        quad dataOffset <format=hex>;
+        quad hashOffset <format=hex>;
+        quad encryptionOffset <format=hex>;
+    } else {
+        uint pathHash <format=hex>;
+        int dataLength <format=hex>;
+        quad dataOffset <format=hex>;
+        if (format >= BHD5FORMAT_DARKSOULS2) {
+            quad hashOffset <format=hex>;
+            quad encryptionOffset <format=hex>;
+        }
+        if (format >= BHD5FORMAT_DARKSOULS3) {
+            int unpaddedDataLength <format=hex>;
+            int pad24 <hidden=true>; Assert(!pad24);
+        }
+    }
+    
+    if (format >= BHD5FORMAT_DARKSOULS2) {
+        PushTell();
+        if (hashOffset) {
+            FSeek(hashOffset);
+            Hash dataHash;
+        }
+        if (encryptionOffset) {
+            FSeek(encryptionOffset);
+            Encryption encryption;
+        }
+        SeekPop();
+    }
+} File <read=Str("%16LXh", pathHash), bgcolor=cLtGreen, optimize=false>;
+
+
+typedef struct {
+    ubyte shaHash[32] <format=hex>;
+    int rangeCount;
+    Range ranges[rangeCount];
+} Hash <bgcolor=cGreen>;
+
+
+typedef struct {
+    ubyte aesKey[16] <format=hex>;
+    int rangeCount;
+    Range ranges[rangeCount];
+} Encryption <bgcolor=cDkGreen>;
+
+
+typedef struct {
+    quad startOffset <format=hex>;
+    quad endOffset <format=hex>;
+} Range <read=ReadRange, bgcolor=cYellow>;
+
+string ReadRange(Range &range) {
+    if (range.startOffset == -1 && range.endOffset == -1) {
+        return Str(" %8Ld,  %8Ld", range.startOffset, range.endOffset);
+    } else {
+        return Str("%8LXh, %8LXh", range.startOffset, range.endOffset);
+    }
+}
+
+//------------------------------------------------
+
+Header header;
+Bucket buckets[header.bucketCount];
