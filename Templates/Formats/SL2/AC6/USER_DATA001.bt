@@ -1,7 +1,7 @@
 //------------------------------------------------
 //--- 010 Editor v14.0 Binary Template
 //
-//      File: SL2/USER_DATA001.bt
+//      File: SL2/AC6/USER_DATA001.bt
 //   Authors: TKGP
 //   Version: 
 //   Purpose: 
@@ -11,9 +11,9 @@
 //   History: 
 //------------------------------------------------
 
-#include "../../Common.bt"
-#include "../../Chunk.bt"
-#include "SL2-Types.bt"
+#include "../../../Common.bt"
+#include "../../../Chunk.bt"
+#include "../SL2-Types.bt"
 
 struct BlockDataColorset;
 

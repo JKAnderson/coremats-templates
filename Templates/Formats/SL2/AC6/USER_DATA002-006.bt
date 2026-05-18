@@ -1,7 +1,7 @@
 //------------------------------------------------
 //--- 010 Editor v14.0 Binary Template
 //
-//      File: SL2/USER_DATA002-006.bt
+//      File: SL2/AC6/USER_DATA002-006.bt
 //   Authors: TKGP
 //   Version: 
 //   Purpose: 
@@ -13,10 +13,10 @@
 
 #define COREMATS_ASMC_LIB
 
-#include "../../Common.bt"
-#include "../../Chunk.bt"
-#include "SL2-Types.bt"
-#include "../ASMC.bt"
+#include "../../../Common.bt"
+#include "../../../Chunk.bt"
+#include "../SL2-Types.bt"
+#include "../../ASMC.bt"
 
 struct BlockDataDateTime;
 struct BlockDataThumbnail;
