@@ -1,0 +1,99 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: MATBIN.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: 
+//  ID Bytes: 4D 41 42 00
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == "MAB\0");
+    int unk04; Assert(unk04 == 2);
+    quad shaderPathOffset <format=hex>;
+    quad sourcePathOffset <format=hex>;
+    int key <format=hex>;
+    int paramCount;
+    int samplerCount;
+    int unk24 <hidden=true>; Assert(!unk24);
+    int unk28 <hidden=true>; Assert(!unk28);
+    int unk2c <hidden=true>; Assert(!unk2c);
+    int unk30 <hidden=true>; Assert(!unk30);
+    int unk34 <hidden=true>; Assert(!unk34);
+    
+    PushTell();
+    FSeek(shaderPathOffset);
+    wstring shaderPath;
+    FSeek(sourcePathOffset);
+    wstring sourcePath;
+    SeekPop();
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    quad nameOffset <format=hex>;
+    quad valueOffset <format=hex>;
+    int key <format=hex>;
+    int type;
+    int unk18 <hidden=true>; Assert(!unk18);
+    int unk1c <hidden=true>; Assert(!unk1c);
+    int unk20 <hidden=true>; Assert(!unk20);
+    int unk24 <hidden=true>; Assert(!unk24);
+    
+    PushTell();
+    FSeek(nameOffset);
+    wstring name;
+    FSeek(valueOffset);
+    switch (type) {
+        // I suspect this is only bool by convention, but there have yet to be any counterexamples
+        case 0: byte value; Assert(IsBool(value)); break;
+        case 4: int value; break;
+        case 5: int value[2]; break;
+        case 8: float value; break;
+        case 9: float value[2]; break;
+        // Sometimes 5 floats are present in the file for type 10, but not always
+        // When present they're always just 1, 1 and testing suggests they don't do anything,
+        // so I think it's safe to ignore
+        case 10: float value[3]; break;
+        case 11: float value[4]; break;
+        case 12: float value[5]; break;
+        default: ubyte value <bgcolor=cBlack>; Assert(false); break;
+    }
+    SeekPop();
+} Param <read=(Str("%2d ", type) + name), bgcolor=cLtGreen, optimize=false>;
+
+
+typedef struct {
+    quad nameOffset <format=hex>;
+    quad pathOffset <format=hex>;
+    int key <format=hex>;
+    Vector2 unk14; // Probably scale
+    int unk1c <hidden=true>; Assert(!unk1c);
+    int unk20 <hidden=true>; Assert(!unk20);
+    int unk24 <hidden=true>; Assert(!unk24);
+    int unk28 <hidden=true>; Assert(!unk28);
+    int unk2c <hidden=true>; Assert(!unk2c);
+    
+    PushTell();
+    FSeek(nameOffset);
+    wstring name;
+    FSeek(pathOffset);
+    wstring path;
+    SeekPop();
+} Sampler <read=name, bgcolor=cAqua, optimize=false>;
+
+//------------------------------------------------
+
+Header header;
+Param params[header.paramCount];
+Sampler samplers[header.samplerCount];
