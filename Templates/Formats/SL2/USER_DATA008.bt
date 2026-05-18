@@ -50,6 +50,11 @@ case "Emblem":
     ubyte data[header.length];
     break;
 
+case "GradeRank":
+    Assert(header.version == 0);
+    ubyte data[header.length];
+    break;
+
 case "MemberList":
     Assert(header.version == 0);
     BlockDataMemberList memberList(header);
@@ -80,7 +85,7 @@ COREMATS_CHUNK_END Chunk <read=ReadChunkHeader(header), optimize=false>;
 //------------------------------------------------
 
 typedef struct {
-    byte unk00; Assert(unk00 == 2); // Team count?
+    byte unk00; // Team count?
     byte memberCount;
     byte unk02; // Winning team?
     byte unk03; // Match type?
@@ -114,6 +119,7 @@ typedef struct {
     Chunk emblem("Emblem");
     Chunk pilotName("PilotName");
     Chunk namePlate("NamePlate");
+    Chunk gradeRank("GradeRank");
     Chunk end("----  end  ----");
 } Member <read=pilotName.pilotName, optimize=false>;
 

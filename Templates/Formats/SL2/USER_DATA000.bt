@@ -15,12 +15,15 @@
 #include "../../Chunk.bt"
 #include "SL2-Types.bt"
 
-struct BlockDataEquipmentLineup;
-struct BlockDataGameDataMan;
-struct BlockDataMissionAchieve;
-struct BlockDataNpcArena;
-struct BlockDataTutorial;
-struct BlockDataUnlock;
+struct ChunkDataEquipmentLineup;
+struct ChunkDataGameDataMan;
+struct ChunkDataMissionAchieve;
+struct ChunkDataMissionFlag;
+struct ChunkDataNpcArena;
+struct ChunkDataPartsToken;
+struct ChunkDataPlayerGameData;
+struct ChunkDataTutorial;
+struct ChunkDataUnlock;
 
 LittleEndian();
 
@@ -48,10 +51,14 @@ case "Contribution":
     Assert(header.version == 0);
     ubyte data[header.length];
     break;
+
+case "EquipData":
+    ubyte data[header.length];
+    break;
     
 case "EquipmentLineup":
     Assert(header.version == 0);
-    BlockDataEquipmentLineup equipmentLineup;
+    ChunkDataEquipmentLineup equipmentLineup;
     break;
     
 case "Event":
@@ -66,7 +73,7 @@ case "ForcedSortie":
 
 case "GameDataMan":
     Assert(header.version == 0);
-    BlockDataGameDataMan gameDataMan;
+    ChunkDataGameDataMan gameDataMan;
     break;
     
 case "GameData_Misc":
@@ -76,11 +83,15 @@ case "GameData_Misc":
     
 case "MissionAchieve":
     Assert(header.version == 2);
-    BlockDataMissionAchieve missionAchieve;
+    ChunkDataMissionAchieve missionAchieve;
     break;
     
 case "MissionFlag":
     Assert(header.version == 2 && header.length == 0x804);
+    ChunkDataMissionFlag missionFlag;
+    break;
+    
+case "NamePlate":
     ubyte data[header.length];
     break;
     
@@ -91,17 +102,33 @@ case "NamePlateParts":
 
 case "NpcArena":
     Assert(header.version == 0);
-    BlockDataNpcArena npcArena;
+    ChunkDataNpcArena npcArena;
+    break;
+    
+case "OsReinforce":
+    ubyte data[header.length];
     break;
     
 case "PartsToken":
     Assert(header.version == 0);
+    ChunkDataPartsToken partsToken;
+    break;
+    
+case "PlayerBasicInfo":
+    ubyte data[header.length];
+    break;
+    
+case "PlayerDesign":
+    ubyte data[header.length];
+    break;
+    
+case "PlayerEmblem":
     ubyte data[header.length];
     break;
     
 case "PlayerGameData":
     Assert(header.version == 1);
-    ubyte data[header.length];
+    ChunkDataPlayerGameData playerGameData;
     break;
     
 case "SaveDataConvLog":
@@ -126,12 +153,12 @@ case "TrophyEquipData":
     
 case "Tutorial":
     Assert(header.version == 0);
-    BlockDataTutorial tutorial;
+    ChunkDataTutorial tutorial;
     break;
 
 case "Unlock":
     Assert(header.version == 0);
-    BlockDataUnlock unlock;
+    ChunkDataUnlock unlock;
     break;
         
 COREMATS_CHUNK_END Chunk <read=ReadChunkHeader(header), optimize=false>;
@@ -148,10 +175,10 @@ string ReadEquipId(int id) {
 
 typedef struct {
     int id;
-    int sold; Assert(sold == 0 || sold == 1);
-    int unk08 <hidden=true>; Assert(unk08 == 0);
-    int unk0c <hidden=true>; Assert(unk0c == 0);
-    int unk10 <hidden=true>; Assert(unk10 == 0);
+    int sold; Assert(IsBool(sold));
+    int unk08 <hidden=true>; Assert(!unk08);
+    int unk0c <hidden=true>; Assert(!unk0c);
+    int unk10 <hidden=true>; Assert(!unk10);
 } EquipmentLineupA <read=Str("%s: %d", ReadEquipId(id), sold), optimize=false>;
 
 typedef struct {
@@ -163,7 +190,7 @@ typedef struct {
     
     int count3;
     int list3[count3];
-} BlockDataEquipmentLineup <bgcolor=cPurple>;
+} ChunkDataEquipmentLineup;
 
 
 typedef struct {
@@ -181,7 +208,7 @@ typedef struct {
     Chunk trophyEquipData("TrophyEquipData");
     Chunk gameDataMisc("GameData_Misc");
     Chunk end("----  end  ----");
-} BlockDataGameDataMan;
+} ChunkDataGameDataMan;
 
 
 typedef struct {
@@ -198,19 +225,54 @@ typedef struct {
     
     int trainingCount;
     MissionAchieve training[trainingCount];
-} BlockDataMissionAchieve;
+} ChunkDataMissionAchieve;
+
+
+typedef struct {
+    int flags;
+    int missionId;
+} MissionFlag <read=Str("%4d: %2xh", missionId, flags)>;
+
+typedef struct {
+    int count;
+    MissionFlag missionFlags[count];
+} ChunkDataMissionFlag;
 
 
 typedef struct {
     int count;
     int arenaIds[count];
-} BlockDataNpcArena <bgcolor=cLtYellow>;
+} ChunkDataNpcArena;
+
+
+typedef struct {
+    int id;
+    byte unk04;
+} PartsToken <read=Str("%5d: %d", id, unk04)>;
+
+typedef struct {
+    int count;
+    PartsToken partsTokens[count];
+} ChunkDataPartsToken;
+
+
+typedef struct {
+    ubyte garbage[0x8a90];
+    Chunk begin("---- begin ----");
+    Chunk playerBasicInfo("PlayerBasicInfo");
+    Chunk equipData("EquipData");
+    Chunk playerEmblem("PlayerEmblem");
+    Chunk playerDesign("PlayerDesign");
+    Chunk osReinforce("OsReinforce");
+    Chunk namePlate("NamePlate");
+    Chunk end("----  end  ----");
+} ChunkDataPlayerGameData;
 
 
 typedef struct {
     int count;
     int tutorialIds[count];
-} BlockDataTutorial <bgcolor=cDkYellow>;
+} ChunkDataTutorial;
 
 
 typedef struct {
@@ -221,7 +283,7 @@ typedef struct {
             int items[count];
         }
     } lists[listCount] <optimize=false>;
-} BlockDataUnlock <bgcolor=cYellow>;
+} ChunkDataUnlock;
 
 //------------------------------------------------
 

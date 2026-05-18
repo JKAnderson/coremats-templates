@@ -30,7 +30,7 @@ string ReadChunkHeader(ChunkHeader &header) {
 }
 
 string PeekChunkSignature() {
-    return ReadString(FTell(), 0x10);    
+    return ReadString(FTell(), 0x10);
 }
 
 //------------------------------------------------
