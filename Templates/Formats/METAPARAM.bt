@@ -23,7 +23,9 @@ typedef struct {
     char magic[4]; Assert(magic == "SMD\0");
     int unk04 <hidden=true>; Assert(!unk04);
     int unk08; Assert(unk08 == 6);
-    int count0c;
+    byte count0c;
+    byte unk0d;
+    short unk0e <hidden=true>; Assert(!unk0e);
     quad offset10 <format=hex>; Assert(offset10 == 0x98 + 0x30 * count0c + 0x28);
     quad offset18 <format=hex>; Assert(offset18 == offset10);
     quad offset20 <format=hex>;
