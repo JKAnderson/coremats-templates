@@ -1,0 +1,39 @@
+//------------------------------------------------
+//--- 010 Editor v16.0 Binary Template
+//
+//      File: AIP.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: *.aip
+//  ID Bytes: 46 50 49 41
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == "FPIA");
+    int unk04; Assert(unk04 == 1);
+    ubyte mapId[4];
+    int itemCount;
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    // Probably x, y, z, angle
+    float unk00;
+    float unk04;
+    float unk08;
+    float unk0c;
+} Item <bgcolor=cLtGreen>;
+
+//------------------------------------------------
+
+Header header;
+Item items[header.itemCount];
