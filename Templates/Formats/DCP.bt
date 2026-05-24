@@ -1,0 +1,76 @@
+//------------------------------------------------
+//--- 010 Editor v16.0 Binary Template
+//
+//      File: DCP.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: 
+//  ID Bytes: 44 43 50 00
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+
+BigEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == "DCP\0");
+    char algorithm[4];
+    int dcpSize <format=hex>; Assert(dcpSize == 0x20);
+    byte level;
+    byte seekChunkReset; Assert(seekChunkReset == 0);
+    short unk0e <hidden=true>; Assert(!unk0e);
+    int blockSize <format=hex>;
+    byte header;
+    byte unk15 <hidden=true>; Assert(!unk15);
+    short unk16 <hidden=true>; Assert(!unk16);
+    int unk18 <hidden=true>; Assert(!unk18);
+    short alignSize <format=hex>;
+    short unk1e <format=hex>; Assert(unk1e == 0x100);
+} Dcp <bgcolor=cAqua>;
+
+
+typedef struct {
+    char magic[4]; Assert(magic == "DCS\0");
+    int dataLengthUncompressed <format=hex>;
+    int dataLengthCompressed <format=hex>;
+} Dcs <bgcolor=cLtGreen>;
+
+
+typedef struct {
+    char magic[4]; Assert(magic == "DCA\0");
+    int dcaSize <format=hex>;
+    if (dcp.algorithm == "EDGE") {
+        struct {
+            char magic[4]; Assert(magic == "EgdT");
+            int unk04 <format=hex>; Assert(unk04 == 0x10000);
+            int unk08 <format=hex>; Assert(unk08 == 0x20);
+            int unk0c <format=hex>; Assert(unk0c == 0x10);
+            int unk10 <format=hex>; Assert(unk10 == 0x10000);
+            int egdtSize <format=hex>;
+            int chunkCount;
+            int unk1c <format=hex>; Assert(unk1c == 0x100000);
+            
+            struct {
+                int unk00 <hidden=true>; Assert(!unk00);
+                int dataOffset <format=hex>;
+                int dataLength <format=hex>;
+                int compressed; Assert(IsBool(compressed));
+            } chunkInfo[chunkCount] <optimize=false, bgcolor=cDkYellow>;
+        } egdt <bgcolor=cYellow>;
+    }
+} Dca <bgcolor=cLtYellow>;
+
+//------------------------------------------------
+
+Dcp dcp;
+Dcs dcs;
+if (dcp.algorithm == "EDGE") {
+    int pad <hidden=true>; Assert(!pad);
+}
+ubyte data[dcs.dataLengthCompressed] <bgcolor=cBlack>;
+Dca dca;
