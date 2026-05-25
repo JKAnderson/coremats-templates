@@ -52,7 +52,7 @@ typedef struct {
             int unk0c <format=hex>; Assert(unk0c == 0x10);
             int unk10 <format=hex>; Assert(unk10 == 0x10000);
             int egdtSize <format=hex>;
-            int chunkCount;
+            int blockCount;
             int unk1c <format=hex>; Assert(unk1c == 0x100000);
             
             struct {
@@ -60,7 +60,7 @@ typedef struct {
                 int dataOffset <format=hex>;
                 int dataLength <format=hex>;
                 int compressed; Assert(IsBool(compressed));
-            } chunkInfo[chunkCount] <optimize=false, bgcolor=cDkYellow>;
+            } blockInfo[blockCount] <optimize=false, bgcolor=cDkYellow>;
         } egdt <bgcolor=cYellow>;
     }
 } Dca <bgcolor=cLtYellow>;

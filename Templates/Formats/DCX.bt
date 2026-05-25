@@ -22,6 +22,8 @@ typedef struct {
     int unk04 <format=hex>;
     int dcsOffset <format=hex>;
     int dcpOffset <format=hex>;
+    // In games before BB (approximately), these offsets are 0x20 smaller than you'd expect
+    // Some games do use them and account for that, so the discrepancy needs to be preserved
     int dcaOffset <format=hex>;
     int dataOffset <format=hex>;
 } Dcx <bgcolor=cLtRed>;
@@ -30,6 +32,7 @@ typedef struct {
 typedef struct {
     char magic[4]; Assert(magic == "DCS\0");
     int dataLengthUncompressed <format=hex>;
+    // For EDGE, this does include the padding between blocks
     int dataLengthCompressed <format=hex>;
 } Dcs <bgcolor=cLtGreen>;
 
@@ -61,9 +64,10 @@ typedef struct {
             int unk08 <format=hex>; Assert(unk08 == 0x24);
             int unk0c <format=hex>; Assert(unk0c == 0x10);
             int unk10 <format=hex>; Assert(unk10 == 0x10000);
-            int trailingChunkLengthUncompressed <format=hex>;
+            // If the file is an exact multiple of the block size, this is the block size, not 0
+            int trailingBlockLengthUncompressed <format=hex>;
             int egdtSize <format=hex>;
-            int chunkCount;
+            int blockCount;
             int unk20 <format=hex>; Assert(unk20 == 0x100000);
             
             struct {
@@ -71,7 +75,7 @@ typedef struct {
                 int dataOffset <format=hex>;
                 int dataLength <format=hex>;
                 int compressed; Assert(IsBool(compressed));
-            } chunkInfo[chunkCount] <optimize=false, bgcolor=cDkYellow>;
+            } blockInfo[blockCount] <optimize=false, bgcolor=cDkYellow>;
         } egdt <bgcolor=cYellow>;
     }
 } Dca <bgcolor=cLtYellow>;
