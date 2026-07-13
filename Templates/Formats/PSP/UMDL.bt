@@ -1,0 +1,47 @@
+//------------------------------------------------
+//--- 010 Editor v16.0 Binary Template
+//
+//      File: 
+//   Authors: TKGP
+//   Version: 
+//   Purpose: ACE Portable and MH Nikki on PSP
+//  Category: Coremats
+// File Mask: *.bhd
+//  ID Bytes: 4C 44 4D 55
+//   History: 
+//------------------------------------------------
+
+#include "../../Common.bt"
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == "LDMU");
+    int unk04 <format=hex>; Assert(unk04 == 0x210);
+    int fileCount;
+    int dataLength <format=hex>;
+    int unk10 <hidden=true>; Assert(!unk10);
+    int unk14 <hidden=true>; Assert(!unk14);
+    int unk18 <hidden=true>; Assert(!unk18);
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    int unk00;
+    int dataBlock;
+    int lengthUncompressed <format=hex>;
+    int lengthCompressed <format=hex>; // 0 if not compressed
+    int unk10 <format=hex>;
+    int unk14 <format=hex>;
+    int unk18 <format=hex>;
+    int unk1c <format=hex>;
+    int unk20 <format=hex>;
+    int unk24 <format=hex>;
+} File <read=Str("%7d @ %8xh", unk00, dataBlock * 0x400), bgcolor=cLtGreen>;
+
+//------------------------------------------------
+
+Header header;
+File files[header.fileCount];

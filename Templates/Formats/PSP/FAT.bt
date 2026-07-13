@@ -1,0 +1,72 @@
+//------------------------------------------------
+//--- 010 Editor v16.0 Binary Template
+//
+//      File: 
+//   Authors: TKGP
+//   Version: 
+//   Purpose: AC Formula Front and MH Nikki on PSP
+//  Category: Coremats
+// File Mask: *.fat
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+#include "../../Common.bt"
+
+struct Directory;
+struct File;
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    // FF: 0x100, PP: 0x210
+    int unk00 <format=hex>; Assert(unk00 == 0x100 || unk00 == 0x210);
+    // FF: end of file, PP: start of strings
+    int unk04 <format=hex>;
+    int unk08 <hidden=true>; Assert(!unk08);
+    int unk0c <hidden=true>; Assert(!unk0c);
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    int nameOffset <format=hex>;
+    int directoriesOffset <format=hex>;
+    int filesOffset <format=hex>;
+    int directoryCount;
+    int fileCount;
+    
+    PushTell();
+    FSeek(nameOffset);
+    string name <bgcolor=cGreen>;
+    
+    if (directoryCount) {
+        FSeek(directoriesOffset);
+        Directory directories[directoryCount];
+    }
+    
+    if (fileCount) {
+        FSeek(filesOffset);
+        File files[fileCount];
+    }
+    SeekPop();
+} Directory <read=name, bgcolor=cLtGreen, optimize=false>;
+
+
+typedef struct {
+    int nameOffset <format=hex>;
+    int index;
+    
+    JumpIn(nameOffset);
+    string name <bgcolor=cDkAqua>;
+    JumpOut();
+} File <read=StringToWString(name, CHARSET_JAPANESE), bgcolor=cAqua, optimize=false>;
+
+//------------------------------------------------
+
+Header header;
+// In FF the root directory has a network path in the name,
+// in PP there's no string for it but they didn't null the offset
+// so it just looks like it's named "font", which is a bit annoying
+Directory root;
