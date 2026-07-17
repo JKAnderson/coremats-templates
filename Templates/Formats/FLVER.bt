@@ -1,0 +1,515 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: FLVER.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: *.flv,*.flver
+//  ID Bytes: 46 4C 56 45 52 00
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+#include "FLVER_Defines.bt"
+
+struct TextureV0;
+struct VertexDeclV0;
+struct VertexBufferV0;
+
+SetEndian(ReadByte(6) == 'B');
+BitfieldRightToLeft();
+
+//------------------------------------------------
+
+typedef struct {
+    int offset <format=hex>;
+    JumpIn(offset);
+    if (header.unicode) {
+        wstring str;
+    } else {
+        string str <read=StringToWString(this, CHARSET_JAPANESE)>;
+    }
+    JumpOut();
+} String <read=ReadStr>;
+
+wstring ReadStr(String &s) {
+    if (header.unicode) {
+        return s.str;
+    } else {
+        return StringToWString(s.str, CHARSET_JAPANESE);
+    }
+}
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[6]; Assert(magic == "FLVER\0");
+    char endian[2]; Assert(endian == "B\0" || endian == "L\0");
+    int version <format=hex>; Assert(
+        version == 0x0000e || // DeS
+        version == 0x00010 || // DeS
+        version == 0x00012 || // DeS
+        version == 0x00013 || // SAT
+        version == 0x00014 || // NB, DeS
+        version == 0x00015 || // NB, PP
+        version == 0x10002 || // PP
+        version == 0x10003 || // ACE R
+        version == 0x10004 ||
+        version == 0x10005 || // PP
+        version == 0x20005 || // GUC
+        version == 0x2000c || // DaS
+        version == 0x2000e || // GUC
+        version == 0x20010 || // DS2S
+        version == 0x20012 ||
+        version == 0x20013 ||
+        version == 0x20014 || // DS3
+        version == 0x2001a || // ER
+        version == 0x2001b || // AC6
+        version == 0x20021 ||
+        0);
+    int buffersOffset <format=hex>;
+    int buffersLength <format=hex>;
+    int dummyCount;
+    int materialCount;
+    int objectCount;
+    int meshCount;
+    int vertexBufferCount;
+    Vector3 boundsMin;
+    Vector3 boundsMax;
+    int effectiveFaceCount; // Excludes degenerate faces and motion blur meshes
+    int totalFaceCount;
+    // Deprecated 20010 < version <= 20014
+    byte indexSize; Assert(indexSize == 0 || indexSize == 8 || indexSize == 16 || indexSize == 32);
+    byte unicode; Assert(IsBool(unicode));
+    byte useResetIndex; Assert(IsBool(useResetIndex));
+    byte unk4b;
+    uint resetIndex <format=hex>;
+    int indexBufferCount;
+    int vertexDeclCount;
+    int textureCount;
+    int unk5c;
+    pad32 unk60; Assert(!unk60);
+    pad32 unk64; Assert(!unk64);
+    uint flags68_0 : 2;
+    uint flags68_disableObjId : 1;
+    uint flags68_3 : 28;
+    uint flags68_isSpeedTree : 1;
+    pad32 unk6c; Assert(!unk6c);
+    pad32 unk70; Assert(!unk70);
+    int unk74;
+    pad32 unk78; Assert(!unk78);
+    pad32 unk7c; Assert(!unk7c);
+} Header <bgcolor=cLtRed>;
+
+//------------------------------------------------
+
+typedef struct {
+    Vector3 translation;
+    struct {
+        uint r : 8 <format=hex>;
+        uint g : 8 <format=hex>;
+        uint b : 8 <format=hex>;
+        uint a : 8 <format=hex>;
+    } color <read=Str("#%02x%02x%02x%02x", r, g, b, a)>;
+    Vector3 normal;
+    short id;
+    short unk1e;
+    Vector3 tangent;
+    short unk2c;
+    byte unk2e; Assert(IsBool(unk2e));
+    byte unk2f; Assert(IsBool(unk2f));
+    int unk30;
+    int unk34;
+    pad32 unk38; Assert(!unk38);
+    pad32 unk3c; Assert(!unk3c);
+} Dummy <read=id, bgcolor=cLtGreen, optimize=false>;
+
+//------------------------------------------------
+
+typedef struct {
+    byte count;
+    pad8 unk01; Assert(!unk01);
+    pad8 unk02; Assert(!unk02);
+    pad8 unk03; Assert(!unk03);
+    pad32 unk04; Assert(!unk04);
+    pad32 unk08; Assert(!unk08);
+    pad32 unk0c; Assert(!unk0c);
+    if (count) TextureV0 textures[count];
+} TextureHost <read=Str("[%d]", count), bgcolor=cDkYellow>;
+
+typedef struct {
+    int count;
+    int offset <format=hex>;
+    pad32 unk08; Assert(!unk08);
+    pad32 unk0c; Assert(!unk0c);
+    
+    JumpIn(offset);
+    int vertexDeclOffsets[count] <format=hex>;
+    
+    struct {
+        local int i <hidden=true>;
+        for (i = 0; i < count; i++) {
+            FSeek(vertexDeclOffsets[i]);
+            VertexDeclV0 vertexDecls;
+        }
+    } vertexDecls;
+    JumpOut();
+} VertexDeclHost <read=Str("[%d]", count), bgcolor=cYellow>;
+
+typedef struct {
+    String name;
+    String path;
+    int textureHostOffset <format=hex>;
+    // When the vertex decl host is present, this just points to the first vertex decl
+    int vertexDeclOffset <format=hex>;
+    // Combined length of the material's strings, textures, and vertex decls,
+    // including padding between them
+    int dataLength <format=hex>;
+    int vertexDeclHostOffset <format=hex>; // Introduced 00010 < version <= 00012
+    pad32 unk18; Assert(!unk18);
+    pad32 unk1c; Assert(!unk1c);
+    
+    PushTell();
+    FSeek(textureHostOffset);
+    TextureHost textures;
+    
+    if (vertexDeclHostOffset) {
+        FSeek(vertexDeclHostOffset);
+        VertexDeclHost vertexDecls;
+    } else {
+        FSeek(vertexDeclOffset);
+        VertexDeclV0 vertexDecl;
+    }
+    SeekPop();
+} MaterialV0 <read=(ReadStr(name) + " @ " + ReadStr(path)), bgcolor=cGreen, optimize=false>;
+
+typedef struct {
+    String name;
+    String path;
+    int textureCount;
+    int textureStartIndex;
+    int stringsLength <format=hex>;
+    int exParamOffset <format=hex>;
+    int unk18;
+    pad32 unk1c; Assert(!unk1c);
+    
+    if (exParamOffset) {
+        JumpIn(exParamOffset);
+        struct {
+            do {
+                struct {
+                    int id <format=hex>;
+                    int unk04;
+                    int length <format=hex>;
+                    if (length > 0xc) ubyte data[length - 0xc];
+                } items <read=Str("%8xh", id)>;
+            } while (items.id != 0x7fffffff);
+        } exParam;
+        JumpOut();
+    }
+} MaterialV2 <read=(ReadStr(name) + " @ " + ReadStr(path)), bgcolor=cGreen, optimize=false>;
+
+//------------------------------------------------
+
+typedef struct {
+    Vector3 translation;
+    String name;
+    Vector3 rotation;
+    short parentIndex;
+    short firstChildIndex;
+    Vector3 scale;
+    short nextSiblingIndex;
+    short previousSiblingIndex;
+    Vector3 boundsMin;
+    int unk3c;
+    Vector3 boundsMax;
+    pad32 unk4c; Assert(!unk4c);
+    pad32 unk50; Assert(!unk50);
+    pad32 unk54; Assert(!unk54);
+    pad32 unk58; Assert(!unk58);
+    pad32 unk5c; Assert(!unk5c);
+    pad32 unk60; Assert(!unk60);
+    pad32 unk64; Assert(!unk64);
+    pad32 unk68; Assert(!unk68);
+    pad32 unk6c; Assert(!unk6c);
+    pad32 unk70; Assert(!unk70);
+    pad32 unk74; Assert(!unk74);
+    pad32 unk78; Assert(!unk78);
+    pad32 unk7c; Assert(!unk7c);
+} Object <read=ReadStr(name), bgcolor=cDkGreen, optimize=false>;
+
+//------------------------------------------------
+
+typedef struct {
+    int count;
+    int offset <format=hex>;
+    pad32 unk08; Assert(!unk08);
+    pad32 unk0c; Assert(!unk0c);
+    
+    if (count) {
+        JumpIn(offset);
+        VertexBufferV0 vertexBuffers[count];
+        JumpOut();
+    }
+} VertexBufferHost <bgcolor=cLtYellow>;
+
+typedef struct {
+    byte unk00;
+    byte materialIndex;
+    byte unk02;
+    byte unk03;
+    int indexCount;
+    int vertexCount;
+    short unk0c;
+    short boneIndices[28];
+    short unk46;
+    int indexBufferLength <format=hex>;
+    int indexBufferOffset <format=hex>;
+    // When the vertex buffer hosts are present, these just point to the first buffer
+    int vertexBufferLength <format=hex>;
+    int vertexBufferOffset <format=hex>;
+    int vertexBufferHostOffsetA <format=hex>; // Introduced 00010 < version <= 00012
+    int vertexBufferHostOffsetB <format=hex>; // Introduced 00015 < version <= 10002
+    pad32 unk60; Assert(!unk60);
+    
+    PushTell();
+    if (indexBufferLength) {
+        FSeek(header.buffersOffset + indexBufferOffset);
+        ubyte indexBuffer[indexBufferLength] <bgcolor=cDkAqua, fgcolor=cBlack>;
+    }
+    
+    if (vertexBufferHostOffsetA) {
+        FSeek(vertexBufferHostOffsetA);
+        VertexBufferHost vertexBuffersA;
+    }
+        
+    if (vertexBufferHostOffsetB) {
+        FSeek(vertexBufferHostOffsetB);
+        VertexBufferHost vertexBuffersB; Assert(vertexBuffersB.count == 0);
+    }
+    
+    if (!vertexBufferHostOffsetA && !vertexBufferHostOffsetB) {
+        FSeek(header.buffersOffset + vertexBufferOffset);
+        ubyte vertexBuffer[vertexBufferLength] <bgcolor=cLtYellow, fgcolor=cBlack>;
+    }
+    SeekPop();
+} MeshV0 <bgcolor=cAqua, optimize=false>;
+
+typedef struct {
+    byte unk00;
+    pad8 unk01; Assert(!unk01);
+    pad8 unk02; Assert(!unk02);
+    pad8 unk03; Assert(!unk03);
+    int materialIndex;
+    pad32 unk08; Assert(!unk08);
+    pad32 unk0c; Assert(!unk0c);
+    int unk10;
+    int boneCount;
+    int boundsOffset <format=hex>;
+    int boneIndicesOffset <format=hex>;
+    int indexBufferCount;
+    int indexBufferIndicesOffset <format=hex>;
+    int vertexBufferCount;
+    int vertexBufferIndicesOffset <format=hex>;
+    
+    PushTell();
+    if (boundsOffset) {
+        FSeek(boundsOffset);
+        struct {
+            Vector3 min;
+            Vector3 max;
+            Vector3 unk;
+        } bounds;
+    }
+    
+    if (boneCount) {
+        FSeek(boneIndicesOffset);
+        int boneIndices[boneCount];
+    }
+    
+    FSeek(indexBufferIndicesOffset);
+    int indexBufferIndices[indexBufferCount];
+    
+    FSeek(vertexBufferIndicesOffset);
+    int vertexBufferIndices[vertexBufferCount];
+    SeekPop();
+} MeshV2 <read=Str("materialIndex=%d", materialIndex), bgcolor=cAqua, optimize=false>;
+
+//------------------------------------------------
+
+typedef struct {
+    uint flags_0 : 24;
+    uint flags_lodLevel1 : 1;
+    uint flags_lodLevel2 : 1;
+    uint flags_26 : 4;
+    uint flags_edgeCompressed : 1;
+    uint flags_motionBlur : 1;
+    byte triangleStrip; Assert(IsBool(triangleStrip));
+    byte cullBackfaces; Assert(IsBool(cullBackfaces));
+    byte unk06;
+    pad8 unk07; Assert(!unk07);
+    int indexCount;
+    int bufferOffset <format=hex>;
+    if (header.version >= 0x2000c) {
+        int bufferLength <format=hex>;
+        pad32 unk14; Assert(!unk14);
+        // Introduced 20010 < version <= 20014
+        int indexSize; Assert(indexSize == 0 || indexSize == 16 || indexSize == 32);
+        pad32 unk1c; Assert(!unk1c);
+    }
+    
+    JumpIn(header.buffersOffset + bufferOffset);
+    if (header.version >= 0x2000c) {
+        ubyte buffer[bufferLength] <fgcolor=cBlack>;
+    } else {
+        ubyte buffer[header.indexSize / 8 * indexCount] <fgcolor=cBlack>;
+    }
+    JumpOut();
+} IndexBuffer <bgcolor=cDkAqua, optimize=false>;
+
+//------------------------------------------------
+
+typedef struct {
+    int vertexDeclIndex;
+    int bufferLength <format=hex>;
+    int bufferOffset <format=hex>;
+    pad32 unk0c; Assert(!unk0c);
+    
+    JumpIn(header.buffersOffset + bufferOffset);
+    ubyte buffer[bufferLength] <fgcolor=cBlack>;
+    JumpOut();
+} VertexBufferV0 <optimize=false>;
+
+typedef struct {
+    int unk00;
+    int vertexDeclIndex;
+    int vertexSize <format=hex>;
+    int vertexCount;
+    pad32 unk10; Assert(!unk10);
+    pad32 unk14; Assert(!unk14);
+    int bufferLength <format=hex>; // Introduced 20005 < version <= 2000c
+    int bufferOffset <format=hex>;
+    
+    JumpIn(header.buffersOffset + bufferOffset);
+    ubyte buffer[vertexSize * vertexCount] <fgcolor=cBlack>;
+    JumpOut();
+} VertexBufferV2 <read=Str("vertexDeclIndex=%d", vertexDeclIndex), bgcolor=cLtYellow, optimize=false>;
+
+//------------------------------------------------
+
+typedef struct {
+    int stream <format=hex>;
+    int offset <format=hex>;
+    DLVertexDeclFormat format;
+    DLVertexDeclUsage usage;
+    int usageIndex;
+} VertexDeclElement <read=ReadVertexDeclElement>;
+
+string ReadVertexDeclElement(VertexDeclElement &e) {
+    return Str("%-14s %-18s stream=%xh index=%d offset=%xh",
+        EnumToString(e.format), EnumToString(e.usage), e.stream, e.usageIndex, e.offset);
+}
+
+typedef struct {
+    short count;
+    short size <format=hex>;
+    pad32 unk04; Assert(!unk04);
+    pad32 unk08; Assert(!unk08);
+    pad32 unk0c; Assert(!unk0c);
+    VertexDeclElement elements[count];
+} VertexDeclV0 <read=Str("[%d] %xh", count, size)>;
+
+typedef struct {
+    int elementCount;
+    pad32 unk04; Assert(!unk04);
+    pad32 unk08; Assert(!unk08);
+    int elementsOffset <format=hex>;
+    
+    JumpIn(elementsOffset);
+    VertexDeclElement elements[elementCount];
+    JumpOut();
+} VertexDeclV2 <bgcolor=cYellow, optimize=false>;
+
+//------------------------------------------------
+
+typedef struct {
+    String path;
+    String paramName;
+    pad32 unk08; Assert(!unk08);
+    pad32 unk0c; Assert(!unk0c);
+} TextureV0 <read=(ReadStr(paramName) + " @ " + ReadStr(path)), optimize=false>;
+
+typedef struct {
+    String path;
+    String paramName;
+    Vector2 tilingScale;
+    TilingType tilingTypeU;
+    TilingType tilingTypeV;
+    pad8 unk12; Assert(!unk12);
+    pad8 unk13; Assert(!unk13);
+    pad32 unk14; Assert(!unk14);
+    pad32 unk18; Assert(!unk18);
+    pad32 unk1c; Assert(!unk1c);
+} TextureV2 <read=(ReadStr(paramName) + " @ " + ReadStr(path)), bgcolor=cDkYellow, optimize=false>;
+
+//------------------------------------------------
+    
+typedef struct {
+    short parentIndex;
+    short firstChildIndex;
+    short nextSiblingIndex;
+    short previousSiblingIndex;
+    int objectIndex;
+    pad32 unk0c; Assert(!unk0c);
+} StructIItem <read=ReadStructIItem, bgcolor=cDkPurple, optimize=false>;
+
+wstring ReadStructIItem(StructIItem &i) {
+    return Str("parent=%3d, child=%3d, next=%3d, prev=%3d, object=%3d \"",
+        i.parentIndex, i.firstChildIndex, i.nextSiblingIndex, i.previousSiblingIndex,
+        i.objectIndex) + ReadStr(objects[i.objectIndex].name) + "\"";
+}
+
+typedef struct {
+    short countA;
+    short countB;
+    int offsetA <format=hex>;
+    int offsetB <format=hex>;
+    pad32 unk0c; Assert(!unk0c);
+    pad32 unk10; Assert(!unk10);
+    pad32 unk14; Assert(!unk14);
+    pad32 unk18; Assert(!unk18);
+    pad32 unk1c; Assert(!unk1c);
+    
+    PushTell();
+    FSeek(offsetA);
+    StructIItem itemsA[countA];
+    FSeek(offsetB);
+    StructIItem itemsB[countB];
+    SeekPop();
+} StructI <bgcolor=cPurple>;
+
+//------------------------------------------------
+
+Header header;
+if (header.version < 0x20000) {
+    if (header.dummyCount) Dummy dummies[header.dummyCount];
+    if (header.materialCount) MaterialV0 materials[header.materialCount];
+    if (header.objectCount) Object objects[header.objectCount];
+    if (header.meshCount) MeshV0 meshes[header.meshCount];
+    Assert(header.vertexBufferCount == header.meshCount);
+    Assert(!header.indexBufferCount);
+    Assert(!header.vertexDeclCount);
+    Assert(!header.textureCount);
+} else {
+    if (header.dummyCount) Dummy dummies[header.dummyCount];
+    if (header.materialCount) MaterialV2 materials[header.materialCount];
+    if (header.objectCount) Object objects[header.objectCount];
+    if (header.meshCount) MeshV2 meshes[header.meshCount];
+    if (header.indexBufferCount) IndexBuffer indexBuffers[header.indexBufferCount];
+    if (header.vertexBufferCount) VertexBufferV2 vertexBuffers[header.vertexBufferCount];
+    if (header.vertexDeclCount) VertexDeclV2 vertexDecls[header.vertexDeclCount];
+    if (header.textureCount) TextureV2 textures[header.textureCount];
+    if (header.version >= 0x2001a) StructI structI;
+}

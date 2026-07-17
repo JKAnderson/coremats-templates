@@ -16,6 +16,16 @@
 
 //------------------------------------------------
 
+#ifndef COREMATS_PAD_ATTRIBS
+#define COREMATS_PAD_ATTRIBS hidden=true, fgcolor=cGray
+#endif // COREMATS_PAD_ATTRIBS
+
+typedef byte pad8 <COREMATS_PAD_ATTRIBS>;
+typedef short pad16 <COREMATS_PAD_ATTRIBS>;
+typedef int pad32 <COREMATS_PAD_ATTRIBS>;
+
+//------------------------------------------------
+
 void Align(int alignment) {
     local int delta = FTell() % alignment;
     if (delta)
@@ -33,10 +43,11 @@ int IsBool(int value) {
 }
 
 void SetEndian(int bigEndian) {
-    if (bigEndian)
+    if (bigEndian) {
         BigEndian();
-    else
+    } else {
         LittleEndian();
+    }
 }
 
 //------------------------------------------------

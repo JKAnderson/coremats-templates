@@ -1,0 +1,95 @@
+//------------------------------------------------
+//--- 010 Editor v16.0 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+#ifndef COREMATS_FLVER_DEFINES_H
+#define COREMATS_FLVER_DEFINES_H
+
+enum <int> DLVertexDeclFormat
+{
+    DLVDF_FLOAT1 = 0,
+    DLVDF_FLOAT2 = 1,
+    DLVDF_FLOAT3 = 2,
+    DLVDF_FLOAT4 = 3,
+    DLVDF_INT1 = 4,
+    DLVDF_INT2 = 5,
+    DLVDF_INT4 = 6,
+    DLVDF_UINT1 = 7,
+    DLVDF_UINT2 = 8,
+    DLVDF_UINT4 = 9,
+    DLVDF_INT1N = 10,
+    DLVDF_INT2N = 11,
+    DLVDF_INT4N = 12,
+    DLVDF_UINT1N = 13,
+    DLVDF_UINT2N = 14,
+    DLVDF_UINT4N = 15,
+    DLVDF_COLOR = 16,
+    DLVDF_UBYTE4 = 17,
+    DLVDF_BYTE4 = 18,
+    DLVDF_UBYTE4N = 19,
+    DLVDF_BYTE4N = 20,
+    DLVDF_SHORT2 = 21,
+    DLVDF_SHORT4 = 22,
+    DLVDF_USHORT2 = 23,
+    DLVDF_USHORT4 = 24,
+    DLVDF_SHORT2N = 25,
+    DLVDF_SHORT4N = 26,
+    DLVDF_USHORT2N = 27,
+    DLVDF_USHORT4N = 28,
+    DLVDF_UDEC3 = 29,
+    DLVDF_DEC3 = 30,
+    DLVDF_UDEC3N = 31,
+    DLVDF_DEC3N = 32,
+    DLVDF_UDEC4 = 33,
+    DLVDF_DEC4 = 34,
+    DLVDF_UDEC4N = 35,
+    DLVDF_DEC4N = 36,
+    DLVDF_UHEND3 = 37,
+    DLVDF_HEND3 = 38,
+    DLVDF_UHEND3N = 39,
+    DLVDF_HEND3N = 40,
+    DLVDF_UDHEN3 = 41,
+    DLVDF_DHEN3 = 42,
+    DLVDF_UDHEN3N = 43,
+    DLVDF_DHEN3N = 44,
+    DLVDF_HALF_2 = 45,
+    DLVDF_HALF_4 = 46,
+};
+
+enum <int> DLVertexDeclUsage
+{
+    DLVDU_POSITION = 0,
+    DLVDU_BLENDWEIGHT = 1,
+    DLVDU_BLENDINDICES = 2,
+    DLVDU_NORMAL = 3,
+    DLVDU_PSIZE = 4,
+    DLVDU_TEXCOORD = 5,
+    DLVDU_TANGENT = 6,
+    DLVDU_BINORMAL = 7,
+    DLVDU_TESSFACTOR = 8,
+    DLVDU_POSITIONT = 9,
+    DLVDU_COLOR = 10,
+    DLVDU_FOG = 11,
+    DLVDU_DEPTH = 12,
+    DLVDU_SAMPLE = 13,
+};
+
+enum <byte> TilingType {
+    TILINGTYPE_NONE,
+    TILINGTYPE_REPEAT,
+    TILINGTYPE_MIRRORREPEAT,
+    TILINGTYPE_CLAMP,
+    TILINGTYPE_BORDER,
+    TILINGTYPE_MIRRORONCE,
+};
+
+#endif // COREMATS_FLVER_DEFINES_H
