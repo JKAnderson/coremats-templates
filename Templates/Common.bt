@@ -101,13 +101,25 @@ typedef struct {
 
 //------------------------------------------------
 
+string VectorFormat(float f) {
+    if (f == 340282346638528859811704183484516925440.0) {
+        return "MAX";
+    } else if (f == -340282346638528859811704183484516925440.0) {
+        return "MIN";
+    } else {
+        return Str("%g", f);
+    }
+}
+
+
 typedef struct {
     float x;
     float y;
 } Vector2 <read=ReadVector2>;
 
 string ReadVector2(Vector2 &v) {
-    return Str("<%f, %f>", v.x, v.y);
+    return Str("<%s, %s>", 
+        VectorFormat(v.x), VectorFormat(v.y));
 }
 
 
@@ -118,7 +130,8 @@ typedef struct {
 } Vector3 <read=ReadVector3>;
 
 string ReadVector3(Vector3 &v) {
-    return Str("<%f, %f, %f>", v.x, v.y, v.z);
+    return Str("<%s, %s, %s>", 
+        VectorFormat(v.x), VectorFormat(v.y), VectorFormat(v.z));
 }
 
 
@@ -130,7 +143,8 @@ typedef struct {
 } Vector4 <read=ReadVector4>;
 
 string ReadVector4(Vector4 &v) {
-    return Str("<%f, %f, %f, %f>", v.x, v.y, v.z, v.w);
+    return Str("<%s, %s, %s, %s>", 
+        VectorFormat(v.x), VectorFormat(v.y), VectorFormat(v.z), VectorFormat(v.w));
 }
 
 //------------------------------------------------
