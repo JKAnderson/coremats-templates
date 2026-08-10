@@ -1,0 +1,128 @@
+//------------------------------------------------
+//--- 010 Editor v15.0.2 Binary Template
+//
+//      File: TPF.bt
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: *.tpf
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+
+enum <byte> TPF_PLATFORM
+{
+    PF_WIN32 = 0,
+    PF_XBOX360,
+    PF_PLAYSTATION3,
+    PF_XBOXONE = 5,
+};
+
+enum <byte> TPF_TEX_FORMAT
+{
+    TF_DXT1C = 0,
+    TF_DXT1A,
+    TF_DXT2,
+    TF_DXT3,
+    TF_DXT4,
+    TF_DXT5,
+    TF_U1555,
+    TF_U4444,
+    TF_U565,
+    TF_U8888,
+    TF_U888,
+    TF_U555,
+    TF_P8C,
+    TF_P8A,
+    TF_P4C,
+    TF_P4A,
+    TF_A8,
+    TF_CXV8U8,
+    TF_V8U8,
+    TF_A8L8,
+    TF_FP32X4,
+    TF_FP32,
+    TF_FP16X4,
+    TF_DXT5NM,
+    TF_CTX1,
+    TF_MAX_NUM,
+    TF_UNKNOWN = -1,
+};
+
+enum <byte> TPF_TEX_TYPE
+{
+    TYPE_2D = 0,
+    TYPE_CUBE,
+    TYPE_VOLUME,
+    TYPE_MAX_NUM,
+    TYPE_UNKNOWN = -1,
+};
+
+local TPF_PLATFORM _platform <hidden=true> = ReadByte(0xc);
+SetEndian(_platform == PF_XBOX360 || _platform == PF_PLAYSTATION3);
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == "TPF\0");
+    uint textureDataLength <format=hex>;
+    uint textureCount;
+    TPF_PLATFORM platform; Assert(EnumToString(platform) != "");
+    byte version;
+    byte encoding;
+    byte reserved <hidden=true>; Assert(!reserved);
+} Header <read=Str("%s v%d", EnumToString(platform), version), bgcolor=cLtRed>;
+
+
+typedef struct {
+    uint dataOffset <format=hex>;
+    uint dataLength <format=hex>;
+    TPF_TEX_FORMAT format;
+    TPF_TEX_TYPE type;
+    byte mipmap;
+    byte reserved <hidden=true>; Assert(!reserved);
+    if (header.platform == PF_XBOX360) {
+        ushort width;
+        ushort height;
+        ushort depth;
+        short reserved2 <hidden=true>; Assert(!reserved2);
+    } else if (header.platform == PF_PLAYSTATION3) {
+        ushort width;
+        ushort height;
+        uint pitch;
+        if (header.version >= 1) {
+            int unk14;
+        }
+    } else if (header.platform == PF_XBOXONE) {
+        ushort width;
+        ushort height;
+        ushort depth;
+        short reserved2 <hidden=true>; Assert(!reserved2);
+        int unk38;
+    }
+    uint nameOffset <format=hex>;
+    uint extradataCount; Assert(extradataCount == 0);
+    if (header.platform == PF_XBOXONE) {
+        int dxgiFormat;
+    }
+    
+    PushTell();
+    FSeek(dataOffset);
+    ubyte data[dataLength] <bgcolor=cDkGreen>;
+    
+    FSeek(nameOffset);
+    if (header.version < 2 || header.encoding == 2) {
+        string name <bgcolor=cGreen>;
+    } else {
+        wstring name <bgcolor=cGreen>;
+    }
+    SeekPop();
+} Texture <read=name, bgcolor=cLtGreen, optimize=false>;
+
+//------------------------------------------------
+
+Header header;
+Texture textures[header.textureCount];

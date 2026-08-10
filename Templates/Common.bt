@@ -90,14 +90,14 @@ typedef struct {
         quad v;
     else
         int v;
-} pintd <read=v>;
+} pintd <read=v, optimize=true>;
 
 typedef struct {
     if (PINT_64BIT)
         quad v <format=hex>;
     else
         int v <format=hex>;
-} pintx <read=Str("%Xh", v)>;
+} pintx <read=Str("%Xh", v), optimize=true>;
 
 //------------------------------------------------
 
