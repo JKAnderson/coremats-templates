@@ -1,0 +1,36 @@
+//------------------------------------------------
+//--- 010 Editor v16.0 Binary Template
+//
+//      File: 
+//   Authors: TKGP
+//   Version: 
+//   Purpose: 
+//  Category: Coremats
+// File Mask: *.mpw
+//  ID Bytes: 6D 70 57 46
+//   History: 
+//------------------------------------------------
+
+#include "../Common.bt"
+
+LittleEndian();
+
+//------------------------------------------------
+
+typedef struct {
+    char magic[4]; Assert(magic == "mpWF");
+    int unk04; Assert(unk04 == 1);
+    int fileSize <format=hex>;
+    int itemCount;
+} Header <bgcolor=cLtRed>;
+
+
+typedef struct {
+    Vector3 position;
+    float angle; // Radians
+} Item <read=Str("<%8g, %8g, %8g> %g", position.x, position.y, position.z, angle), bgcolor=cLtGreen>;
+
+//------------------------------------------------
+
+Header header;
+Item items[header.itemCount];
